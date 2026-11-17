@@ -1,0 +1,11 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "ready": "READY FOR NEW GAME"
+  },
+  "placeholder": {
+    "title": "NEW GAME — STUB",
+    "subtitle": "Awaiting detailed brief",
+    "hint": "The engine is running. Game mechanics will be implemented here once the brief arrives."
+  }
+}

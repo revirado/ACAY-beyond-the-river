@@ -1,0 +1,11 @@
+{
+  "common": {
+    "loading": "Cargando…",
+    "ready": "LISTO PARA NUEVO JUEGO"
+  },
+  "placeholder": {
+    "title": "NUEVO JUEGO — STUB",
+    "subtitle": "Esperando brief detallado",
+    "hint": "El motor está corriendo. Las mecánicas del juego se implementarán aquí cuando llegue el brief."
+  }
+}

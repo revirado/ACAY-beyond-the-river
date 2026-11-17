@@ -1,0 +1,149 @@
+{
+  "common": {
+    "free": "Free",
+    "loading": "Preparing the village…"
+  },
+  "items": {
+    "wheat": "Wheat",
+    "apple": "Apple",
+    "wood": "Firewood",
+    "bread": "Bread"
+  },
+  "keys": {
+    "move": "move",
+    "interact": "interact",
+    "menu": "menu",
+    "music": "music",
+    "navigate": "navigate",
+    "select": "select"
+  },
+  "hud": {
+    "coins": "Coins",
+    "prosperity": "Prosperity",
+    "clock": {
+      "dawn": "Dawn",
+      "day": "Day",
+      "dusk": "Dusk",
+      "night": "Night"
+    }
+  },
+  "title": {
+    "subtitle": "A little story of trade and prosperity",
+    "prompt": "— Press ENTER or click to start —",
+    "play": "Start adventure",
+    "assetNote": "Demo procedural art — every asset can be replaced with real PNG/URL by editing only the asset index, no code changes needed."
+  },
+  "intro": {
+    "subtitle": "The young merchant arrives in town...",
+    "skip": "ENTER — skip"
+  },
+  "menu": {
+    "pause": "Paused",
+    "pauseCanvas": "— PAUSED —",
+    "subtitle": "The village awaits whenever you're ready.",
+    "resume": "Continue",
+    "music": "Music",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "restart": "Restart game",
+    "language": "Language"
+  },
+  "restart": {
+    "title": "Restart the game?",
+    "body": "Your current progress will be lost and the story will start over from the intro.",
+    "cancel": "Cancel",
+    "confirm": "Yes, restart"
+  },
+  "interaction": {
+    "dialogOf": "Dialog with",
+    "empty": "There's nothing to do here for now.",
+    "close": "Back to town (ESC)",
+    "hint": "ESC or click outside the panel to go back",
+    "keysHint": "↑ ↓ navigate · Enter select"
+  },
+  "world": {
+    "merchant": "Merchant Tomás",
+    "wheat_field": "Wheat field",
+    "apple_tree": "Roadside apple tree",
+    "oven_cold": "Stone oven",
+    "oven_hot": "Firewood oven",
+    "actions": {
+      "wheat_field": "Gather wheat",
+      "apple_tree": "Gather apples",
+      "market": "Trade",
+      "oven": "Use oven"
+    }
+  },
+  "dialog": {
+    "merchantGreeting": "Welcome, traveler! Take a look at today's goods.",
+    "noResources": "Not enough resources",
+    "noItem": "You don't have {item}",
+    "gatherGreeting": "Everything is ready for harvest. Gather some {item}?",
+    "gatherAction": "Gather 1 {item}",
+    "gatherDesc": "The village resources belong to everyone.",
+    "ovenColdGreeting": "The oven is cold and full of cobwebs... The merchant could help you build one.",
+    "ovenHotGreeting": "The oven is hot! The smell of fresh bread fills the square.",
+    "bakeAction": "Bake 1 bread",
+    "bakeDesc": "Grandma's recipe: patient dough and just enough firewood.",
+    "noIngredients": "Not enough ingredients"
+  },
+  "econ": {
+    "oneCoin": "1 coin",
+    "coins": "{n} coins",
+    "missingCoins": "You need {n} more coins",
+    "missingItem": "You need {n} more {item}",
+    "alreadyDone": "This is already done.",
+    "verbSell": "Sold",
+    "verbBuy": "Bought",
+    "verbBuild": "Completed",
+    "gainedCoinsOne": "+1 coin",
+    "gainedCoins": "+{n} coins",
+    "gainedItem": "+{n} {item}",
+    "unknownOffer": "Unknown offer.",
+    "unknownAction": "Unknown action.",
+    "ovenFirst": "You need to build the oven first.",
+    "bakeMissing": "You need {n} more {item} to bake",
+    "breadReady": "Bread's ready! It smells delicious.",
+    "gathered": "You gathered 1 {item}."
+  },
+  "trades": {
+    "sell_wheat": {
+      "label": "Sell wheat",
+      "description": "Golden wheat, freshly harvested from the field."
+    },
+    "sell_apple": {
+      "label": "Sell apple",
+      "description": "Red apples from the roadside tree."
+    },
+    "sell_bread": {
+      "label": "Sell bread",
+      "description": "Freshly baked bread. The aroma opens wallets!"
+    },
+    "buy_wood": {
+      "label": "Buy firewood",
+      "description": "Dry firewood, perfect for feeding an oven."
+    },
+    "build_oven": {
+      "label": "Build firewood oven",
+      "description": "Your own oven in the square. The village will prosper with you."
+    }
+  },
+  "progression": {
+    "stage1": {
+      "name": "Humble hamlet",
+      "message": "A new oven warms the village square!"
+    },
+    "stage2": {
+      "name": "Bustling town",
+      "message": "Trade is flourishing: 25 coins earned for the villa."
+    },
+    "stage3": {
+      "name": "Prosperous village",
+      "message": "Your bread is famous across the region."
+    },
+    "stage4": {
+      "name": "Flourishing villa",
+      "message": "The villa shines with new life! Travelers come to see you."
+    }
+  }
+}

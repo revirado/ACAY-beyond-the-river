@@ -1,0 +1,149 @@
+{
+  "common": {
+    "free": "Gratis",
+    "loading": "Preparando el pueblo…"
+  },
+  "items": {
+    "wheat": "Trigo",
+    "apple": "Manzana",
+    "wood": "Leña",
+    "bread": "Pan"
+  },
+  "keys": {
+    "move": "moverse",
+    "interact": "interactuar",
+    "menu": "menú",
+    "music": "música",
+    "navigate": "navegar",
+    "select": "seleccionar"
+  },
+  "hud": {
+    "coins": "Monedas",
+    "prosperity": "Prosperidad",
+    "clock": {
+      "dawn": "Amanecer",
+      "day": "Día",
+      "dusk": "Atardecer",
+      "night": "Noche"
+    }
+  },
+  "title": {
+    "subtitle": "Una pequeña historia de comercio y prosperidad",
+    "prompt": "— Presiona ENTER o haz clic para comenzar —",
+    "play": "Comenzar aventura",
+    "assetNote": "Arte procedural de demostración — cada asset puede reemplazarse por PNG/URL reales editando solo el índice de assets, sin tocar el código."
+  },
+  "intro": {
+    "subtitle": "El joven comerciante llega al pueblo...",
+    "skip": "ENTER — saltar"
+  },
+  "menu": {
+    "pause": "Pausa",
+    "pauseCanvas": "— PAUSA —",
+    "subtitle": "El pueblo te espera cuando quieras.",
+    "resume": "Continuar",
+    "music": "Música",
+    "mute": "Silenciar",
+    "unmute": "Activar",
+    "restart": "Reiniciar partida",
+    "language": "Idioma"
+  },
+  "restart": {
+    "title": "¿Reiniciar la partida?",
+    "body": "Tu progreso actual se perderá y la historia comenzará de nuevo desde la intro.",
+    "cancel": "Cancelar",
+    "confirm": "Sí, reiniciar"
+  },
+  "interaction": {
+    "dialogOf": "Diálogo con",
+    "empty": "Aquí no hay nada que hacer por ahora.",
+    "close": "Volver al pueblo (ESC)",
+    "hint": "ESC o clic fuera del panel para volver",
+    "keysHint": "↑ ↓ navegar · Enter seleccionar"
+  },
+  "world": {
+    "merchant": "Mercader Tomás",
+    "wheat_field": "Campo de trigo",
+    "apple_tree": "Manzano del camino",
+    "oven_cold": "Horno de piedra",
+    "oven_hot": "Horno de leña",
+    "actions": {
+      "wheat_field": "Recolectar trigo",
+      "apple_tree": "Recolectar manzanas",
+      "market": "Comerciar",
+      "oven": "Usar horno"
+    }
+  },
+  "dialog": {
+    "merchantGreeting": "¡Bienvenido, viajero! Mira qué mercancía traje hoy.",
+    "noResources": "Sin recursos suficientes",
+    "noItem": "No tienes {item}",
+    "gatherGreeting": "Todo listo para la cosecha. ¿Recolectas algo de {item}?",
+    "gatherAction": "Recolectar 1 {item}",
+    "gatherDesc": "Los recursos del pueblo son de todos.",
+    "ovenColdGreeting": "El horno está frío y lleno de telarañas... El mercader podría ayudarte a construir uno.",
+    "ovenHotGreeting": "¡El horno está caliente! El aroma del pan llena la plaza.",
+    "bakeAction": "Hornear 1 pan",
+    "bakeDesc": "La receta de la abuela: masa paciente y leña justa.",
+    "noIngredients": "Sin ingredientes suficientes"
+  },
+  "econ": {
+    "oneCoin": "1 moneda",
+    "coins": "{n} monedas",
+    "missingCoins": "Te faltan {n} monedas",
+    "missingItem": "Te falta(n) {n} {item}",
+    "alreadyDone": "Esto ya está hecho.",
+    "verbSell": "Vendiste",
+    "verbBuy": "Compraste",
+    "verbBuild": "Completaste",
+    "gainedCoinsOne": "+1 moneda",
+    "gainedCoins": "+{n} monedas",
+    "gainedItem": "+{n} {item}",
+    "unknownOffer": "Oferta desconocida.",
+    "unknownAction": "Acción desconocida.",
+    "ovenFirst": "Primero necesitas construir el horno.",
+    "bakeMissing": "Te falta(n) {n} {item} para hornear",
+    "breadReady": "¡Pan listo! Huele delicioso.",
+    "gathered": "Has recogido 1 {item}."
+  },
+  "trades": {
+    "sell_wheat": {
+      "label": "Vender trigo",
+      "description": "Trigo dorado, recién cosechado del campo."
+    },
+    "sell_apple": {
+      "label": "Vender manzana",
+      "description": "Manzanas rojas del árbol del camino."
+    },
+    "sell_bread": {
+      "label": "Vender pan",
+      "description": "Pan recién horneado. ¡El aroma abre billeteras!"
+    },
+    "buy_wood": {
+      "label": "Comprar leña",
+      "description": "Leña seca, perfecta para alimentar un horno."
+    },
+    "build_oven": {
+      "label": "Construir horno de leña",
+      "description": "Un horno propio en la plaza. El pueblo prosperará contigo."
+    }
+  },
+  "progression": {
+    "stage1": {
+      "name": "Aldea humilde",
+      "message": "¡Un horno nuevo calienta la plaza del pueblo!"
+    },
+    "stage2": {
+      "name": "Pueblo en marcha",
+      "message": "El comercio florece: 25 monedas ganadas para la villa."
+    },
+    "stage3": {
+      "name": "Pueblo próspero",
+      "message": "Tus panes son famosos en la región."
+    },
+    "stage4": {
+      "name": "Villa floreciente",
+      "message": "¡La villa brilla con vida nueva! Los viajeros llegan a verte."
+    }
+  }
+}
