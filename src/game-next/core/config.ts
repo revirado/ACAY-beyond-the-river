@@ -127,6 +127,10 @@ export const CONFIG = {
     tabTravelSec: 2.5,
     /** Exponente de la curva de perspectiva del track (>1 = lento lejos, rápido cerca). */
     trackCurveExp: 2.2,
+    /** Duración del titileo post-hit (ms). Si otro hit ocurre antes, se resetea (no suma). */
+    blinkDurationMs: 1500,
+    /** Frecuencia del titileo (Hz — ciclos de transparencia por segundo). */
+    blinkHz: 8,
     /** Geometría de la pista en perspectiva (coords virtuales). */
     track: {
       cx: 640,            // VIRTUAL_WIDTH / 2

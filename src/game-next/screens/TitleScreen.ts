@@ -5,6 +5,7 @@ import type { GameScreen } from '@/engine/core/ScreenManager'
 import type { AcayGameState } from '@/game-next/state/gameState'
 import { CONFIG } from '@/game-next/core/config'
 import { CONTROLS, wasAnyPressed } from '@/game-next/core/controls'
+import { t } from '@/engine/i18n'
 
 type TitlePhase = 'fadeIn' | 'hold' | 'bgFadeOut' | 'titleFadeOut' | 'delay' | 'done'
 
@@ -157,6 +158,36 @@ export class TitleScreen implements GameScreen<'title', AcayGameState> {
           alpha: this.titleAlpha,
         })
       }
+
+      // Créditos (bottom-right, justificado a la derecha) — con alpha del título
+      const creditAlpha = this.titleAlpha * 0.85
+      const pad = 32
+      renderer.text(t('title.developed_by'), VIRTUAL_WIDTH - pad, VIRTUAL_HEIGHT - pad - 44, {
+        size: 14,
+        color: 'rgba(243,227,194,0.7)',
+        align: 'right',
+        baseline: 'alphabetic',
+        font: 'serif',
+        alpha: creditAlpha,
+      })
+      renderer.text(t('title.dev1'), VIRTUAL_WIDTH - pad, VIRTUAL_HEIGHT - pad - 24, {
+        size: 16,
+        weight: 'bold',
+        color: '#f3e3c2',
+        align: 'right',
+        baseline: 'alphabetic',
+        font: 'serif',
+        alpha: creditAlpha,
+      })
+      renderer.text(t('title.dev2'), VIRTUAL_WIDTH - pad, VIRTUAL_HEIGHT - pad - 4, {
+        size: 16,
+        weight: 'bold',
+        color: '#f3e3c2',
+        align: 'right',
+        baseline: 'alphabetic',
+        font: 'serif',
+        alpha: creditAlpha,
+      })
     }
   }
 }

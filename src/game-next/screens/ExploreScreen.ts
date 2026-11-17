@@ -8,7 +8,7 @@ import { CONFIG, PALETTE } from '@/game-next/core/config'
 import { CONTROLS, wasAnyPressed } from '@/game-next/core/controls'
 import { buildSceneElements, ANTAGONISTS } from '@/game-next/data/scene'
 import { buildDialogueTriggers, evaluateTriggers, newTriggerEvalState, type DialogueTrigger, type TriggerEvalState } from '@/game-next/core/triggers'
-import { t } from '@/engine/i18n'
+import { t, getLocale } from '@/engine/i18n'
 
 /**
  * ExploreScreen — modo exploración POV (point & click).
@@ -29,16 +29,24 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
   private elements: NarrativeElement[] = []
   private triggers: DialogueTrigger[] = []
   private prevHoveredId: string | null = null
+  /** Locale con el que se construyeron elements/triggers (para detectar cambio). */
+  private builtLocale = ''
   /** Estado de evaluación de triggers de diálogo (timers por trigger). */
   private triggerEval: TriggerEvalState = newTriggerEvalState()
 
   enter(ctx: ScreenContext<AcayGameState>): void {
-    this.elements = buildSceneElements()
-    this.triggers = buildDialogueTriggers()
+    this.rebuildForLocale()
     ctx.state.hoveredElementId = null
     this.prevHoveredId = null
     this.triggerEval = newTriggerEvalState()
     ctx.syncUI()
+  }
+
+  /** Reconstruye elements + triggers con el locale actual (t() resuelve). */
+  private rebuildForLocale(): void {
+    this.elements = buildSceneElements()
+    this.triggers = buildDialogueTriggers()
+    this.builtLocale = getLocale()
   }
 
   exit(ctx: ScreenContext<AcayGameState>): void {
@@ -50,6 +58,18 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
     void dt
     const st = ctx.state
     const input = ctx.input
+
+    // ── Detectar cambio de idioma → reconstruir elements + triggers ──
+    // (test de centralización de textos: al switchear ES/EN, todos los
+    // labels/hover/inspect/dialogues se re-resuelven con el nuevo locale.)
+    const curLocale = getLocale()
+    if (curLocale !== this.builtLocale) {
+      this.rebuildForLocale()
+      // Reset hover para que el tooltip use los textos nuevos
+      this.prevHoveredId = null
+      st.hoveredElementId = null
+      ctx.syncUI()
+    }
 
     // ── Triggers de diálogo auto-iniciados (La Pacha, etc.) ──
     const trigger = evaluateTriggers(this.triggers, this.triggerEval, {

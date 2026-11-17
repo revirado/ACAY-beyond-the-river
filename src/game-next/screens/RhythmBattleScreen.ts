@@ -43,6 +43,11 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
   private acayLaneVisual = 1
   /** Flag de fin para no re-disparar requestSwitch. */
   private finished = false
+  /**
+   * Titileo post-hit: timestamp (ms) hasta el que Acay titila. Si otro tab lo
+   * golpea antes, se SOBREESCRIBE (no se suma — los tiempos no se acumulan).
+   */
+  private blinkUntilMs = 0
   /** Sistema del motor: pista en perspectiva (math reutilizable). */
   private track: PerspectiveTrack = new PerspectiveTrack(
     CONFIG.rhythm.track,
@@ -57,6 +62,7 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
     const cfg = CONFIG.rhythm
     // Refrescar el track con la config actual (por si cambió).
     this.track = new PerspectiveTrack(cfg.track, cfg.tabTravelSec, cfg.trackCurveExp)
+    this.blinkUntilMs = 0
 
     // Generar schedule de tabs mockup
     const tabs: RhythmTab[] = []
@@ -124,6 +130,8 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
           battle.hp--
           battle.hits++
           this.resolved.push({ tab, result: 'hit', resolveMs: performance.now() })
+          // Titileo: resetea el timer (no suma con uno previo en curso).
+          this.blinkUntilMs = performance.now() + CONFIG.rhythm.blinkDurationMs
         } else {
           battle.dodges++
           this.resolved.push({ tab, result: 'dodge', resolveMs: performance.now() })
@@ -235,12 +243,22 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
     const acayPos = track.position(1, this.acayLaneVisual, battle.lanes)
     const acayX = acayPos.x
     const acayY = track.geom.botY - 10
+    // Titileo post-hit: si está dentro del window de blink, alpha oscila.
+    // Si otro hit ocurre antes, blinkUntilMs se sobreescribe (no suma).
+    const now = performance.now()
+    let acayAlpha = 1
+    if (now < this.blinkUntilMs) {
+      // Oscilación senoidal entre 0.25 y 1.0
+      const remaining = (this.blinkUntilMs - now) / 1000
+      const phase = (1 - remaining / (CONFIG.rhythm.blinkDurationMs / 1000)) * CONFIG.rhythm.blinkHz * Math.PI * 2
+      acayAlpha = 0.25 + 0.75 * (0.5 + 0.5 * Math.sin(phase))
+    }
     try {
       const acayImg = ctx.assets.get('acay.back')
       const acaySize = ctx.assets.getSize('acay.back')
       const acayScale = 1.5
-      renderer.image(acayImg, acayX, acayY, { scale: acayScale })
-      // Sombra de Acay en el suelo
+      renderer.image(acayImg, acayX, acayY, { scale: acayScale, alpha: acayAlpha })
+      // Sombra de Acay en el suelo (sin titileo, siempre visible)
       renderer.ellipse(acayX, acayY + 4, acaySize.w * acayScale * 0.35, 8, 'rgba(0,0,0,0.4)')
       void acaySize
     } catch {

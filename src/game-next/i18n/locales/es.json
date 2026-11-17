@@ -93,5 +93,10 @@
     "inventory_button": "Inventario",
     "inventory_empty": "Vacío",
     "inventory_close": "Cerrar"
+  },
+  "title": {
+    "developed_by": "Desarrollado por:",
+    "dev1": "Ariel Lamas",
+    "dev2": "Gastón Lamas"
   }
 }

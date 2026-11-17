@@ -86,7 +86,10 @@ export class PerspectiveTrack {
   ): { x: number; y: number; scale: number } {
     const p = easedProgress
     const halfW = this.geom.topHalfW + (this.geom.botHalfW - this.geom.topHalfW) * p
-    const t = lanes === 1 ? 0.5 : lane / (lanes - 1)
+    // t = centro del lane dentro del track. (lane + 0.5) / lanes pone cada
+    // lane en el centro de su "cuadrado" (tercio si lanes=3), NO en las
+    // esquinas. Así Acay y los tabs se alinean en el centro de cada lane.
+    const t = (lane + 0.5) / lanes
     const x = this.geom.cx - halfW + t * halfW * 2
     const y = this.geom.topY + (this.geom.botY - this.geom.topY) * p
     const scale = 0.35 + p * 0.65
