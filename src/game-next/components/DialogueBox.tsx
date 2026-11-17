@@ -20,22 +20,33 @@ import { t } from '@/engine/i18n'
 export function DialogueBox() {
   const dialogue = useGameStore((s) => s.dialogue)
   const [revealed, setRevealed] = useState(0)
+  const [waiting, setWaiting] = useState(false)
 
   const fullText = dialogue?.fullText ?? ''
   const phase = dialogue?.phase ?? 'idle'
+  const waitSec = dialogue?.waitSec ?? 0
 
-  // Reset `revealed` cuando cambia la línea (fullText). Patrón "store previous
-  // prop" recomendado por React para ajustar state durante el render (evita
-  // set-state-in-effect).
+  // Reset `revealed` + maneja waitSec cuando cambia la línea (fullText).
   const [prevFullText, setPrevFullText] = useState(fullText)
   if (fullText !== prevFullText) {
     setPrevFullText(fullText)
     setRevealed(0)
+    // Si la línea tiene waitSec > 0, entrar en modo espera (pausa dramática)
+    setWaiting(waitSec > 0)
   }
 
-  // Typewriting: incrementa `revealed` a CONFIG.explore.typewriterCps caracteres/seg.
+  // Timer para salir del modo espera tras waitSec segundos.
   useEffect(() => {
-    if (!dialogue || revealed >= fullText.length) return
+    if (!waiting) return
+    const id = window.setTimeout(() => {
+      setWaiting(false)
+    }, waitSec * 1000)
+    return () => window.clearTimeout(id)
+  }, [waiting, waitSec])
+
+  // Typewriting: incrementa `revealed` (solo si no está esperando).
+  useEffect(() => {
+    if (!dialogue || waiting || revealed >= fullText.length) return
     const cps = CONFIG.explore.typewriterCps
     const intervalMs = 1000 / cps
     const id = window.setInterval(() => {
@@ -50,8 +61,9 @@ export function DialogueBox() {
     return () => window.clearInterval(id)
   }, [dialogue, fullText, revealed])
 
-  const visibleText = useMemo(() => fullText.slice(0, revealed), [fullText, revealed])
-  const done = revealed >= fullText.length
+  const slicedText = useMemo(() => fullText.slice(0, revealed), [fullText, revealed])
+  const visibleText = waiting ? '…' : slicedText
+  const done = !waiting && revealed >= fullText.length
   const hasMore = dialogue ? dialogue.lineIndex < dialogue.lineCount - 1 : false
 
   if (!dialogue) return null
@@ -67,24 +79,38 @@ export function DialogueBox() {
     >
       <div
         className="rounded-lg border-2 shadow-xl shadow-black/40 backdrop-blur-sm"
-        style={{
-          background: `${PALETTE.pergamino}f2`,
-          borderColor: PALETTE.pergaminoBorde,
-          padding: phase === 'conversation' ? '14px 18px 16px' : '12px 16px 14px',
-        }}
+        style={
+          phase === 'voice'
+            ? {
+                // Voz incorpórea: fondo oscuro translúcido, borde dorado etéreo
+                background: 'rgba(15,10,8,0.85)',
+                borderColor: 'rgba(217,168,63,0.5)',
+                padding: '14px 18px 16px',
+                boxShadow: '0 0 20px rgba(217,168,63,0.15)',
+              }
+            : {
+                background: `${PALETTE.pergamino}f2`,
+                borderColor: PALETTE.pergaminoBorde,
+                padding: phase === 'conversation' ? '14px 18px 16px' : '12px 16px 14px',
+              }
+        }
       >
         {/* Speaker */}
         <div
           className="mb-1 text-sm font-bold uppercase tracking-wide"
-          style={{ color: PALETTE.pergaminoBorde }}
+          style={{
+            color: phase === 'voice' ? 'rgba(217,168,63,0.8)' : PALETTE.pergaminoBorde,
+            fontStyle: phase === 'voice' ? 'italic' : 'normal',
+          }}
         >
           {speaker}
         </div>
-        {/* Texto — legible siempre (Acay incluido; el balbuceo es sonido, no texto) */}
+        {/* Texto — legible siempre. Voz incorpórea: cursiva, color dorado pálido. */}
         <p
           className="font-serif leading-snug"
           style={{
-            color: PALETTE.tinta,
+            color: phase === 'voice' ? 'rgba(230,182,85,0.9)' : PALETTE.tinta,
+            fontStyle: phase === 'voice' ? 'italic' : 'normal',
             fontSize: 17,
             minHeight: 22,
           }}

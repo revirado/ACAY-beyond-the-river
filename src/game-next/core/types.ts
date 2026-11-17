@@ -11,7 +11,7 @@ import type { BaseUISnapshot, WorldObjectDef } from '@/engine/core/types'
 export type ScreenId = 'studio' | 'title' | 'explore' | 'rhythm-battle'
 
 /** Fase de la caja de diálogo (UI React). */
-export type DialoguePhase = 'idle' | 'narration' | 'conversation'
+export type DialoguePhase = 'idle' | 'narration' | 'conversation' | 'voice'
 
 /* ───────────────── Elementos narrativos (escena de exploración POV) ───────────────── */
 
@@ -59,7 +59,24 @@ export interface NarrativeElement {
     /** Texto de narración al recoger el item (primera vez). */
     pickupText: string
   }
+  /** X donde Acay debe detenerse al caminar hacia el elemento (default: el.x). */
+  walkToX?: number
+  /** Si es una salida (exit hotspot): no tiene sprite, indicador sutil. */
+  isExit?: boolean
+  /** Si es salida: id de la escena destino (null = bloqueada, ej. left exit). */
+  exitTargetScene?: string
+  /** Si está bloqueado (no se puede interactuar hasta cumplir condición). */
+  blocked?: boolean
+  /** Texto a mostrar cuando se clickea estando bloqueado. */
+  blockedText?: string
+  /** Flag que, cuando es true, oculta el elemento de la escena (ej. pickup). */
+  hideFlag?: string
+  /** Asset alternativo cuando un flag es true (ej. gaucho despierto). */
+  altAsset?: { flag: string; asset: string }
 }
+
+/** Escenas del juego Acay. */
+export type SceneId = 'river_shore' | 'campamento'
 
 /** Línea de diálogo. Acay balbucea (isAcay=true → texto incomprensible). */
 export interface DialogueLine {
@@ -67,6 +84,8 @@ export interface DialogueLine {
   text: string
   /** Si es Acay: el jugador no entiende (se muestra como balbuceo). */
   isAcay?: boolean
+  /** Pausa dramática antes de mostrar la línea (segundos). */
+  waitSec?: number
 }
 
 /* ───────────────── Inventario ───────────────── */
@@ -137,6 +156,8 @@ export interface AcaySnapshot extends BaseUISnapshot {
     /** Índice de línea actual / total. */
     lineIndex: number
     lineCount: number
+    /** Pausa dramática antes de mostrar la línea (segundos, 0 = sin pausa). */
+    waitSec: number
   } | null
   /** Inventario actual. */
   inventory: InventoryItem[]
@@ -154,6 +175,15 @@ export interface AcaySnapshot extends BaseUISnapshot {
   } | null
   /** Elemento bajo hover del puntero (para tooltip). */
   hoveredElementId: string | null
+  /**
+   * Si la UI está desbloqueada (inventario, language switch, cursor custom).
+   * Inicia false — se desbloquea diegéticamente cuando Acay despierta (1.1).
+   */
+  uiUnlocked: boolean
+  /** Si el inventario está desbloqueado (se abre tras recoger la pava, 2.3). */
+  inventoryUnlocked: boolean
+  /** Objetivo actual (string i18n key resuelta) o null si no hay. */
+  objective: string | null
 }
 
 /** WorldObjectDef del juego (interaction = NarrativeElement payload). */

@@ -59,6 +59,7 @@ function buildAcaySnapshot(ctx: GameSnapshotContext<AcayState>): AcaySnapshot {
       isAcay: line.isAcay ?? false,
       lineIndex: st.dialogueIndex,
       lineCount: st.currentDialogue.length,
+      waitSec: line.waitSec ?? 0,
     }
   }
 
@@ -93,6 +94,9 @@ function buildAcaySnapshot(ctx: GameSnapshotContext<AcayState>): AcaySnapshot {
     inventory: st.inventory,
     battle,
     hoveredElementId: st.hoveredElementId,
+    uiUnlocked: !!st.flags.acayAwakened,
+    inventoryUnlocked: !!st.flags.inventoryUnlocked,
+    objective: st.objective,
   }
 }
 

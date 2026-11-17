@@ -125,11 +125,10 @@ function isConditionMet(
  */
 export function buildDialogueTriggers(): DialogueTrigger[] {
   const pacha = t('dialogues.pacha_greeting.speaker_pacha')
-  const pachaR = t('dialogues.pacha_relics.speaker_pacha')
 
   const pachaGreeting: DialogueTrigger = {
     id: 'pacha_greeting',
-    condition: { type: 'onSceneEnter', sceneId: 'explore' },
+    condition: { type: 'onFlag', flag: 'acayAwakened' },
     once: true,
     delaySec: 1.5,
     speaker: pacha,
@@ -142,19 +141,24 @@ export function buildDialogueTriggers(): DialogueTrigger[] {
     ],
   }
 
-  const pachaRelics: DialogueTrigger = {
-    id: 'pacha_relics',
-    condition: { type: 'onInventoryCount', minCount: 2 },
+  // pacha_relics removido: pickup mockup fuera de scene 01.
+
+  /**
+   * Voz desconocida (1.2): tras cerrar el diálogo del despertar, Acay gira
+   * a mirar el río (back view) y una voz incorpórea resuona. Trigger onFlag
+   * 'scene01AwakeningDone' con 1s de delay. Phase 'voice' (estilo diferenciado).
+   */
+  const voiceUnknown: DialogueTrigger = {
+    id: 'voice_unknown',
+    condition: { type: 'onFlag', flag: 'scene01AwakeningDone' },
     once: true,
-    delaySec: 0.8,
-    speaker: pachaR,
-    phase: 'conversation',
+    delaySec: 1.0,
+    speaker: t('scene01.voice_speaker'),
+    phase: 'voice',
     dialogue: [
-      { speaker: pachaR, text: t('dialogues.pacha_relics.l1') },
-      { speaker: pachaR, text: t('dialogues.pacha_relics.l2') },
-      { speaker: pachaR, text: t('dialogues.pacha_relics.l3') },
+      { speaker: t('scene01.voice_speaker'), text: t('scene01.voice_line') },
     ],
   }
 
-  return [pachaGreeting, pachaRelics]
+  return [pachaGreeting, voiceUnknown]
 }

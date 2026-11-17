@@ -18,6 +18,13 @@ export {
 import { FADE_PRESETS } from '@/engine/core/config'
 
 /**
+ * Versión de desarrollo. Se muestra en la esquina inferior izquierda (siempre
+ * visible). Incrementar el último dígito en cada iteración (v0.0.X). El
+ * segundo dígito solo sube a v0.1.0 cuando el usuario lo indique.
+ */
+export const VERSION = 'v0.0.10'
+
+/**
  * Paleta andina NOA (Valles Calchaquíes / Puna).
  * Tonos tierra: terracota, ocre, marrón, verde agostado, crema.
  * SIN azul/índigo (regla del proyecto + ambientación andina).
@@ -96,6 +103,16 @@ export const CONFIG = {
 
   /** Exploración POV. */
   explore: {
+    /** Duración del fade-in inicial (de negro a escena) al entrar a explore. */
+    introFadeInMs: 1500,
+    /** Duración de la animación de incorporación (ms). */
+    standUpMs: 1000,
+    /** Amplitud del shake (sacudir poncho) durante la incorporación. */
+    standUpShakePx: 3,
+    /** Velocidad de caminata de Acay (px/seg en coords virtuales). */
+    walkSpeed: 320,
+    /** Distancia para considerar que Acay llegó al target (px). */
+    walkArriveDist: 8,
     /** Color del puntero customizado. */
     cursorColor: PALETTE.acento,
     cursorSize: 14,

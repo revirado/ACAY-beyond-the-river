@@ -12,6 +12,8 @@ import { DialogueBox } from '@/game-next/components/DialogueBox'
 import { Inventory } from '@/game-next/components/Inventory'
 import { CustomCursor } from '@/game-next/components/CustomCursor'
 import { LanguageSwitch } from '@/game-next/components/LanguageSwitch'
+import { VersionBadge } from '@/game-next/components/VersionBadge'
+import { ObjectiveTracker } from '@/game-next/components/ObjectiveTracker'
 
 /**
  * AcayHost — monta el motor con `acayModule` sobre el canvas y compone los
@@ -29,6 +31,8 @@ export function AcayHost({ devMode = false }: { devMode?: boolean }) {
   const ready = useGameStore((s) => s.ready)
   const screen = useGameStore((s) => s.screen)
   const hasDialogue = useGameStore((s) => s.dialogue !== null)
+  const uiUnlocked = useGameStore((s) => s.uiUnlocked ?? false)
+  const inventoryUnlocked = useGameStore((s) => s.inventoryUnlocked ?? false)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -105,12 +109,13 @@ export function AcayHost({ devMode = false }: { devMode?: boolean }) {
           </div>
         )}
 
-        {/* Overlays según pantalla */}
+        {/* Overlays según pantalla — UI progresiva: oculta hasta uiUnlocked */}
         {ready && screen === 'explore' && (
           <>
             {hasDialogue && <DialogueBox />}
-            <Inventory />
-            <LanguageSwitch />
+            {inventoryUnlocked && <Inventory />}
+            {uiUnlocked && <LanguageSwitch />}
+            <ObjectiveTracker />
           </>
         )}
         {ready && screen === 'rhythm-battle' && (
@@ -119,8 +124,13 @@ export function AcayHost({ devMode = false }: { devMode?: boolean }) {
           </>
         )}
 
-        {/* Puntero customizado: por encima de todo (z-50). Solo en explore/battle. */}
+        {/* Puntero customizado: por encima de todo (z-50). Siempre visible en
+            explore/battle (incluso antes de uiUnlocked — el jugador necesita
+            el cursor para clickear a Acay inconsciente). */}
         {ready && (screen === 'explore' || screen === 'rhythm-battle') && <CustomCursor />}
+
+        {/* Versión de desarrollo — siempre visible (todas las pantallas) */}
+        <VersionBadge />
 
         {/* devMode badge */}
         {ready && devMode && (

@@ -39,6 +39,15 @@ export class AcayGameState extends GameState {
   /** ID del elemento bajo hover del puntero (null si ninguno). */
   hoveredElementId: string | null = null
 
+  /** Objetivo actual (texto resuelto via i18n) o null si no hay. */
+  objective: string | null = null
+
+  /** Escena activa (river_shore | campamento). */
+  currentScene: string = 'river_shore'
+
+  /** Contador de intentos de salir por la izquierda (scene 01, 1.3). */
+  leftExitAttempts = 0
+
   /** Reinicio completo (nueva partida). */
   reset(): void {
     this.inventory = []
@@ -48,6 +57,9 @@ export class AcayGameState extends GameState {
     this.dialoguePhase = 'idle'
     this.battle = null
     this.hoveredElementId = null
+    this.objective = null
+    this.currentScene = "river_shore"
+    this.leftExitAttempts = 0
     this.markChanged()
   }
 

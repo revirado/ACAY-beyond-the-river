@@ -369,3 +369,14 @@ acción de UI).
 estructura, layout, contratos o conducta verificada (y sumar a §8 cualquier
 gotcha nuevo descubierto). Es lo que hace que el método valga la pena: cada
 iteración comparte su aprendizaje con la siguiente.
+
+## 10. Directiva de versionado (automático)
+
+**SIEMPRE incrementar `VERSION` en `src/game-next/core/config.ts` al final de
+cada iteración**, salvo que el usuario indique lo contrario. La versión se
+muestra en la esquina inferior izquierda via `VersionBadge` (siempre visible).
+
+- Formato: `v0.0.X` (X = último dígito, incrementa +1 por iteración).
+- El último dígito puede llegar hasta 99 (v0.0.99).
+- El segundo dígito (v0.1.0) **solo sube cuando el usuario lo indique**.
+- Ejemplo: v0.0.6 → v0.0.7 → v0.0.8 → ... → v0.0.99 → (esperar indicación) → v0.1.0.

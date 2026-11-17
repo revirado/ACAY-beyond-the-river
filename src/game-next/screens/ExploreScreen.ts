@@ -3,51 +3,104 @@ import type { ScreenContext } from '@/engine/core/context'
 import type { Renderer } from '@/engine/render/Renderer'
 import type { GameScreen } from '@/engine/core/ScreenManager'
 import type { AcayGameState } from '@/game-next/state/gameState'
-import type { NarrativeElement, DialogueLine } from '@/game-next/core/types'
+import type { NarrativeElement } from '@/game-next/core/types'
 import { CONFIG, PALETTE } from '@/game-next/core/config'
 import { CONTROLS, wasAnyPressed } from '@/game-next/core/controls'
-import { buildSceneElements, ANTAGONISTS } from '@/game-next/data/scene'
+import { buildSceneElements, ANTAGONISTS, ACAY_ENTER_POS, SCENE_BACKGROUND } from '@/game-next/data/scene'
 import { buildDialogueTriggers, evaluateTriggers, newTriggerEvalState, type DialogueTrigger, type TriggerEvalState } from '@/game-next/core/triggers'
 import { t, getLocale } from '@/engine/i18n'
+import { evalAnim, phaseFromId } from '@/engine/render/anim'
 
 /**
- * ExploreScreen — modo exploración POV (point & click).
+ * ExploreScreen — modo exploración POV (point & click) con movimiento de Acay.
  *
- * - Renderiza el fondo de la ribera + elementos narrativos (y-sorted).
- * - Puntero customizado: sigue al mouse (coords virtuales via InputManager).
- * - Hover sobre un elemento → highlight + tooltip con label.
- * - Clic:
- *   - Si hay diálogo activo → avanza la línea (o cierra si es la última).
- *   - Si el elemento es personaje con triggersBattle → switch a rhythm-battle.
- *   - Si el elemento es personaje → inicia conversación (caja de diálogo se expande).
- *   - Si no → revela narración (inspección) en la caja de diálogo.
- * - ESC: cierra el diálogo activo.
+ * SISTEMA DE ESCENAS:
+ *   - state.currentScene determina qué escena se carga (river_shore | campamento).
+ *   - Cada escena tiene sus elementos (buildSceneElements(sceneId)).
+ *   - Transición: fade-out → cambiar escena → fade-in.
+ *
+ * MOVIMIENTO DE ACAY (MoveTo):
+ *   - Clic en hotspot → Acay camina hacia walkToX → ejecuta acción (diálogo,
+ *     inspección, pickup, exit, etc.).
+ *   - Durante el caminado, hover/clic deshabilitados.
+ *
+ * FLUJO 1.1-1.3 (Escena 01: River Shore):
+ *   1. Fade-in desde negro. UI oculta. Acay inconsciente.
+ *   2. Clic Acay → incorporación → diálogo → UI desbloqueada.
+ *   3. Clic rocas → camina → "Si pudiera tirar esta roca..." → objetivo actualizado.
+ *   4. Clic izquierda → camina → diálogo según contador (bloqueada).
+ *   5. Clic derecha → camina → fade-out → Escena 02 (campamento).
+ *
+ * ESCENA 02 (Campamento — scaffold):
+ *   - Gaucho dormido, pava, maderas, cenizas, río, cardón.
+ *   - Pava/maderas/cenizas bloqueadas hasta diálogo con gaucho (2.2 futuro).
+ *   - Río inspeccionable (diálogo largo 1ra vez, corto después).
  */
+type AcayState = 'unconscious' | 'standing_up' | 'awake'
+type FadeDir = 'in' | 'out' | null
+
 export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
   readonly id = 'explore' as const
 
   private elements: NarrativeElement[] = []
   private triggers: DialogueTrigger[] = []
   private prevHoveredId: string | null = null
-  /** Locale con el que se construyeron elements/triggers (para detectar cambio). */
   private builtLocale = ''
-  /** Estado de evaluación de triggers de diálogo (timers por trigger). */
   private triggerEval: TriggerEvalState = newTriggerEvalState()
 
+  private acayState: AcayState = 'unconscious'
+  private standUpUntilMs = 0
+  private enterMs = 0
+
+  /** Sistema de fade (0=visible, 1=negro). */
+  private fadeAlpha = 1
+  private fadeDir: FadeDir = 'in'
+  /** Escena pendiente de cargar (cuando fadeAlpha llega a 1). */
+  private pendingScene: string | null = null
+
+  /** Movimiento de Acay. */
+  private acayX = 500
+  private acayTargetX: number | null = null
+  private pendingAction: (() => void) | null = null
+  private facing: 1 | -1 = 1
+  /** Owner del diálogo activo (para detectar fin de diálogo del gaucho). */
+  private _dialogueOwner: string | null = null
+
   enter(ctx: ScreenContext<AcayGameState>): void {
-    this.rebuildForLocale()
-    ctx.state.hoveredElementId = null
-    this.prevHoveredId = null
-    this.triggerEval = newTriggerEvalState()
+    this.loadScene(ctx, ctx.state.currentScene)
+    this.acayState = ctx.state.flags.acayAwakened ? 'awake' : 'unconscious'
+    this.fadeAlpha = 1
+    this.fadeDir = 'in'
+    this.pendingScene = null
+    this.enterMs = performance.now()
     ctx.syncUI()
   }
 
-  /** Reconstruye elements + triggers con el locale actual (t() resuelve). */
-  private rebuildForLocale(): void {
-    this.elements = buildSceneElements()
+  /** Carga los elementos de una escena + resetea Acay. */
+  private loadScene(ctx: ScreenContext<AcayGameState>, sceneId: string): void {
+    this.rebuildForLocale(sceneId)
+    ctx.state.hoveredElementId = null
+    this.prevHoveredId = null
+    this.triggerEval = newTriggerEvalState()
+    const pos = ACAY_ENTER_POS[sceneId as 'river_shore' | 'campamento'] ?? { x: 500, y: 630 }
+    this.acayX = pos.x
+    this.acayTargetX = null
+    this.pendingAction = null
+    this.facing = 1
+  }
+
+  private rebuildForLocale(sceneId?: string): void {
+    const sid = sceneId ?? this.elements.length > 0 ? this.currentSceneId() : 'river_shore'
+    this.elements = buildSceneElements(sid)
     this.triggers = buildDialogueTriggers()
     this.builtLocale = getLocale()
   }
+
+  private currentSceneId(): string {
+    // Hack: can't access state here without ctx. Stored externally.
+    return this._sceneId ?? 'river_shore'
+  }
+  private _sceneId = 'river_shore'
 
   exit(ctx: ScreenContext<AcayGameState>): void {
     ctx.state.hoveredElementId = null
@@ -55,55 +108,127 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
   }
 
   update(dt: number, ctx: ScreenContext<AcayGameState>): void {
-    void dt
     const st = ctx.state
     const input = ctx.input
 
-    // ── Detectar cambio de idioma → reconstruir elements + triggers ──
-    // (test de centralización de textos: al switchear ES/EN, todos los
-    // labels/hover/inspect/dialogues se re-resuelven con el nuevo locale.)
+    // ── Detectar cambio de idioma → reconstruir ──
     const curLocale = getLocale()
     if (curLocale !== this.builtLocale) {
-      this.rebuildForLocale()
-      // Reset hover para que el tooltip use los textos nuevos
+      this.rebuildForLocale(this._sceneId)
       this.prevHoveredId = null
       st.hoveredElementId = null
       ctx.syncUI()
     }
 
-    // ── Triggers de diálogo auto-iniciados (La Pacha, etc.) ──
-    const trigger = evaluateTriggers(this.triggers, this.triggerEval, {
-      currentSceneId: this.id,
-      inventoryCount: st.inventory.length,
-      flags: st.flags,
-      hasActiveDialogue: !!st.currentDialogue,
-      now: performance.now(),
-    })
-    if (trigger) {
-      st.currentDialogue = trigger.dialogue
-      st.dialogueIndex = 0
-      st.dialoguePhase = trigger.phase
-      if (trigger.once) st.flags[`trigger:${trigger.id}`] = true
-      ctx.syncUI()
-      return // el diálogo arranca; no procesar hover/clic este frame
+    // ── Sistema de fade ──
+    if (this.fadeDir === 'in') {
+      const elapsed = (performance.now() - this.enterMs) / 1000
+      const dur = CONFIG.explore.introFadeInMs / 1000
+      this.fadeAlpha = Math.max(0, 1 - elapsed / dur)
+      if (this.fadeAlpha <= 0) { this.fadeDir = null; ctx.syncUI() }
+    } else if (this.fadeDir === 'out') {
+      this.fadeAlpha = Math.min(1, this.fadeAlpha + dt / (CONFIG.explore.introFadeInMs / 1000))
+      if (this.fadeAlpha >= 1) {
+        // Fade completo → cambiar escena si hay pendiente
+        if (this.pendingScene) {
+          this._sceneId = this.pendingScene
+          st.currentScene = this.pendingScene
+          this.loadScene(ctx, this.pendingScene)
+          this.pendingScene = null
+          this.fadeDir = 'in'
+          this.enterMs = performance.now()
+          ctx.syncUI()
+        }
+      }
     }
 
-    // ── Hover detection: elemento bajo el puntero ──
+    // ── Animación de incorporación: standing_up → awake ──
+    if (this.acayState === 'standing_up' && performance.now() >= this.standUpUntilMs) {
+      this.acayState = 'awake'
+      st.flags.acayAwakened = true
+      st.currentDialogue = [
+        { speaker: t('scene01.acay_label'), text: t('scene01.acay_line'), isAcay: true },
+      ]
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'conversation'
+      ctx.syncUI()
+      return
+    }
+
+    // ── Movimiento de Acay (walk to target) ──
+    if (this.acayTargetX !== null) {
+      const target = this.acayTargetX
+      const speed = CONFIG.explore.walkSpeed
+      const dx = target - this.acayX
+      const dist = Math.abs(dx)
+      if (dist < CONFIG.explore.walkArriveDist) {
+        // Llegó
+        this.acayX = target
+        this.acayTargetX = null
+        const action = this.pendingAction
+        this.pendingAction = null
+        if (action) action()
+        ctx.syncUI()
+        return
+      } else {
+        const move = Math.min(dist, speed * dt)
+        this.acayX += Math.sign(dx) * move
+        this.facing = dx > 0 ? 1 : -1
+      }
+      return // mientras camina, no procesar hover/clic
+    }
+
+    // ── Triggers (solo en river_shore, solo tras despertar) ──
+    if (this.acayState === 'awake' && this._sceneId === 'river_shore' && this.fadeAlpha <= 0) {
+      const trigger = evaluateTriggers(this.triggers, this.triggerEval, {
+        currentSceneId: this.id,
+        inventoryCount: st.inventory.length,
+        flags: st.flags,
+        hasActiveDialogue: !!st.currentDialogue,
+        now: performance.now(),
+      })
+      if (trigger) {
+        st.currentDialogue = trigger.dialogue
+        st.dialogueIndex = 0
+        st.dialoguePhase = trigger.phase
+        if (trigger.once) st.flags[`trigger:${trigger.id}`] = true
+        ctx.syncUI()
+        return
+      }
+    }
+
+    // ── Hover detection ──
     const ptr = input.getPointerPos()
     let hovered: NarrativeElement | null = null
-    if (ptr && !st.currentDialogue) {
-      // Solo hover si no hay diálogo activo (el cursor está "ocupado")
+    if (ptr && !st.currentDialogue && this.fadeAlpha <= 0 && this.acayState === 'awake') {
       for (const el of this.elements) {
+        if (el.id === 'acay') continue // Acay no es hoverable post-despertar
+        // Ocultar elementos con hideFlag activo (ej. pickup ya recogido)
+        if (el.hideFlag && st.flags[el.hideFlag]) continue
         const scale = el.scale ?? 1
         const hw = (el.hitW ?? 80) * scale
         const hh = (el.hitH ?? 100) * scale
-        // Hit area: rect centrado en (el.x, el.y - hh/2) — base en el.y
         if (
           ptr.x >= el.x - hw / 2 && ptr.x <= el.x + hw / 2 &&
           ptr.y >= el.y - hh && ptr.y <= el.y
         ) {
           hovered = el
           break
+        }
+      }
+    }
+    // Hover especial: Acay inconsciente
+    if (ptr && !st.currentDialogue && this.fadeAlpha <= 0 && this.acayState === 'unconscious') {
+      const acayEl = this.elements.find((e) => e.id === 'acay')
+      if (acayEl) {
+        const scale = acayEl.scale ?? 1
+        const hw = (acayEl.hitW ?? 80) * scale
+        const hh = (acayEl.hitH ?? 100) * scale
+        if (
+          ptr.x >= acayEl.x - hw / 2 && ptr.x <= acayEl.x + hw / 2 &&
+          ptr.y >= acayEl.y - hh && ptr.y <= acayEl.y
+        ) {
+          hovered = acayEl
         }
       }
     }
@@ -118,58 +243,40 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
     const click = input.consumeClick()
     if (click) {
       if (st.currentDialogue) {
-        // Diálogo activo: avanza línea o cierra
+        // Diálogo activo: avanza o cierra
         if (st.dialogueIndex < st.currentDialogue.length - 1) {
           st.dialogueIndex++
           ctx.syncUI()
         } else {
-          // Última línea → cerrar
           st.currentDialogue = null
           st.dialogueIndex = 0
           st.dialoguePhase = 'idle'
+          // 1.2: tras cerrar diálogo del despertar → Acay gira + objetivo
+          if (st.flags.acayAwakened && !st.flags.scene01AwakeningDone) {
+            st.flags.scene01AwakeningDone = true
+            st.objective = t('scene01.objective_cross_river')
+          }
+          // 2.2: tras cerrar diálogo del gaucho → desbloquear props
+          if (this._dialogueOwner === 'gaucho' && !st.flags.gauchoDialogueDone) {
+            st.flags.gauchoDialogueDone = true
+          }
+          this._dialogueOwner = null
           ctx.syncUI()
         }
       } else if (hovered) {
-        // Clic en elemento (sin diálogo)
-        if (hovered.isCharacter && hovered.triggersBattle) {
-          // Inicia batalla rítmica
-          ctx.screens.requestSwitch('rhythm-battle', { antagonistId: hovered.triggersBattle }, CONFIG.fade.normal)
-        } else if (hovered.isCharacter && hovered.dialogue) {
-          // Inicia conversación
-          st.currentDialogue = hovered.dialogue
-          st.dialogueIndex = 0
-          st.dialoguePhase = 'conversation'
+        // ── Click especial: Acay inconsciente → despertar ──
+        if (hovered.id === 'acay' && this.acayState === 'unconscious') {
+          this.acayState = 'standing_up'
+          this.standUpUntilMs = performance.now() + CONFIG.explore.standUpMs
+          st.hoveredElementId = null
+          this.prevHoveredId = null
           ctx.syncUI()
-        } else if (hovered.pickup) {
-          // Elemento pickup: recoge item si no lo tiene, si no inspección normal
-          if (!st.hasItem(hovered.pickup.itemId)) {
-            st.addItem({
-              id: hovered.pickup.itemId,
-              label: hovered.pickup.label,
-              icon: hovered.pickup.icon,
-              description: hovered.pickup.description,
-            })
-            st.currentDialogue = [
-              { speaker: hovered.label, text: hovered.pickup.pickupText },
-            ]
-          } else {
-            // Ya lo tiene → inspección normal
-            st.currentDialogue = [
-              { speaker: hovered.label, text: hovered.inspectText },
-            ]
-          }
-          st.dialogueIndex = 0
-          st.dialoguePhase = 'narration'
-          ctx.syncUI()
-        } else {
-          // Inspección (narración de una sola línea)
-          st.currentDialogue = [
-            { speaker: hovered.label, text: hovered.inspectText },
-          ]
-          st.dialogueIndex = 0
-          st.dialoguePhase = 'narration'
-          ctx.syncUI()
+          return
         }
+        // ── Click normal: caminar hacia el elemento + ejecutar acción ──
+        if (this.acayState !== 'awake') return
+        const walkToX = hovered.walkToX ?? hovered.x
+        this.startWalkTo(walkToX, () => this.interactElement(ctx, hovered))
       }
     }
 
@@ -182,75 +289,339 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
     }
   }
 
+  /** Inicia el caminado de Acay hacia targetX + acción al llegar. */
+  private startWalkTo(targetX: number, action: () => void): void {
+    this.acayTargetX = targetX
+    this.pendingAction = action
+  }
+
+  /** Ejecuta la interacción con un elemento (tras caminar hasta él). */
+  private interactElement(ctx: ScreenContext<AcayGameState>, el: NarrativeElement): void {
+    const st = ctx.state
+
+    // Exit hotspot
+    if (el.isExit) {
+      if (el.exitTargetScene && el.exitTargetScene.length > 0) {
+        // Salida con destino → transición de escena
+        this.pendingScene = el.exitTargetScene
+        this.fadeDir = 'out'
+      } else if (el.id === 'right_exit' && this._sceneId === 'campamento') {
+        // Salida derecha en campamento → interceptada por gaucho (prep Escena 03)
+        const g = t('scene02.gaucho_speaker')
+        st.currentDialogue = [
+          { speaker: g, text: t('scene02.gaucho_stop_1') },
+          { speaker: t('scene01.acay_label'), text: '…', isAcay: true },
+          { speaker: g, text: t('scene02.gaucho_stop_3') },
+        ]
+        st.dialogueIndex = 0
+        st.dialoguePhase = 'conversation'
+      } else {
+        // Salida izquierda en river_shore → bloqueada, diálogo según contador
+        st.leftExitAttempts++
+        const n = st.leftExitAttempts
+        const line = n === 1 ? t('scene01.left_exit_1') : n === 2 ? t('scene01.left_exit_2') : t('scene01.left_exit_3')
+        st.currentDialogue = [{ speaker: t('scene01.acay_label'), text: line, isAcay: true }]
+        st.dialogueIndex = 0
+        st.dialoguePhase = 'conversation'
+      }
+      ctx.syncUI()
+      return
+    }
+
+    // Bloqueado (dinámico: kettle/wood/ashes desbloquean tras diálogo gaucho)
+    if (el.blocked && !st.flags.gauchoDialogueDone) {
+      st.currentDialogue = [{ speaker: '', text: el.blockedText ?? '...' }]
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'narration'
+      ctx.syncUI()
+      return
+    }
+
+    // Personaje con batalla
+    if (el.isCharacter && el.triggersBattle) {
+      ctx.screens.requestSwitch('rhythm-battle', { antagonistId: el.triggersBattle }, CONFIG.fade.normal)
+      return
+    }
+
+    // Gaucho (2.2): despierta + diálogo con pausas; al cerrar → unblock props
+    if (el.id === 'gaucho' && el.dialogue) {
+      st.flags.gauchoAwake = true
+      st.currentDialogue = el.dialogue
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'conversation'
+      this._dialogueOwner = 'gaucho'
+      ctx.syncUI()
+      return
+    }
+
+    // Personaje con diálogo (genérico)
+    if (el.isCharacter && el.dialogue) {
+      st.currentDialogue = el.dialogue
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'conversation'
+      this._dialogueOwner = el.id
+      ctx.syncUI()
+      return
+    }
+
+    // Pickup especial: kettle (2.3) → multi-speaker + precargado inventory
+    if (el.id === 'kettle' && el.pickup && !st.hasItem(el.pickup.itemId)) {
+      // Ocultar pava del escenario
+      st.flags.kettleTaken = true
+      // Añadir Item_Pava
+      st.addItem({
+        id: el.pickup.itemId, label: el.pickup.label,
+        icon: el.pickup.icon, description: el.pickup.description,
+      })
+      // Precargado: Guitarra, Poncho, Lentes (primera vez que se abre inventario)
+      if (!st.flags.inventoryUnlocked) {
+        st.flags.inventoryUnlocked = true
+        st.addItem({ id: 'guitar', label: t('scene02.guitar_label'), icon: 'ui.item_guitar', description: t('scene02.guitar_desc') })
+        st.addItem({ id: 'poncho', label: t('scene02.poncho_label'), icon: 'ui.item_poncho', description: t('scene02.poncho_desc') })
+        st.addItem({ id: 'lentes', label: t('scene02.lentes_label'), icon: 'ui.item_lentes', description: t('scene02.lentes_desc') })
+        ctx.toast(t('scene02.inventory_unlocked'))
+      }
+      // Diálogo multi-speaker: Gaucho + Acay
+      const g = t('scene02.gaucho_speaker')
+      st.currentDialogue = [
+        { speaker: g, text: t('scene02.kettle_gaucho') },
+        { speaker: t('scene01.acay_label'), text: el.pickup.pickupText, isAcay: true },
+      ]
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'conversation'
+      ctx.syncUI()
+      return
+    }
+
+    // Pickup especial: wood (2.3) → multi-speaker
+    if (el.id === 'wood' && el.pickup && !st.hasItem(el.pickup.itemId)) {
+      st.flags.woodTaken = true
+      st.addItem({
+        id: el.pickup.itemId, label: el.pickup.label,
+        icon: el.pickup.icon, description: el.pickup.description,
+      })
+      const g = t('scene02.gaucho_speaker')
+      st.currentDialogue = [
+        { speaker: g, text: t('scene02.wood_gaucho') },
+        { speaker: t('scene01.acay_label'), text: el.pickup.pickupText, isAcay: true },
+      ]
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'conversation'
+      ctx.syncUI()
+      return
+    }
+
+    // Pickup genérico
+    if (el.pickup) {
+      if (!st.hasItem(el.pickup.itemId)) {
+        st.addItem({
+          id: el.pickup.itemId, label: el.pickup.label,
+          icon: el.pickup.icon, description: el.pickup.description,
+        })
+        if (el.hideFlag) st.flags[el.hideFlag] = true
+        st.currentDialogue = [{ speaker: el.label, text: el.pickup.pickupText }]
+      } else {
+        st.currentDialogue = [{ speaker: el.label, text: el.inspectText }]
+      }
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'narration'
+      ctx.syncUI()
+      return
+    }
+
+    // Inspección especial: rocas (1.3) → actualiza objetivo
+    if (el.id === 'rocks') {
+      st.currentDialogue = [{ speaker: t('scene01.acay_label'), text: t('scene01.rocks_inspect'), isAcay: true }]
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'conversation'
+      st.objective = t('scene01.objective_push_rocks')
+      ctx.syncUI()
+      return
+    }
+
+    // Inspección especial: río (scene 02) → long/short
+    if (el.id === 'river_02') {
+      if (!st.flags.river02Inspected) {
+        st.flags.river02Inspected = true
+        st.currentDialogue = [{ speaker: t('scene01.acay_label'), text: t('scene02.river_inspect_long'), isAcay: true }]
+      } else {
+        st.currentDialogue = [{ speaker: t('scene01.acay_label'), text: t('scene02.river_inspect_short'), isAcay: true }]
+      }
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'conversation'
+      ctx.syncUI()
+      return
+    }
+
+    // Inspección normal
+    st.currentDialogue = [{ speaker: el.label, text: el.inspectText }]
+    st.dialogueIndex = 0
+    st.dialoguePhase = 'narration'
+    ctx.syncUI()
+  }
+
   render(renderer: Renderer, ctx: ScreenContext<AcayGameState>): void {
     const st = ctx.state
 
-    // Fondo de la ribera
-    renderer.image(ctx.assets.get('scene.river_shore'), VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2, {
-      anchor: 'center',
-    })
+    // Fondo de la escena
+    const bgAsset = SCENE_BACKGROUND[this._sceneId as 'river_shore' | 'campamento'] ?? 'scene.river_shore'
+    renderer.image(ctx.assets.get(bgAsset), VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2, { anchor: 'center' })
 
-    // Elementos narrativos (y-sorted por profundidad)
-    const drawables = this.elements.map((el) => ({
-      y: el.y,
-      draw: () => this.drawElement(renderer, ctx, el),
-    }))
+    // Elementos (excluyendo Acay — se dibuja aparte con posición dinámica)
+    const acayEl = this.elements.find((e) => e.id === 'acay')
+    const otherEls = this.elements.filter((e) => e.id !== 'acay')
+
+    const drawables: Array<{ y: number; draw: () => void }> = []
+
+    // Acay (con asset según estado + posición dinámica)
+    if (acayEl) {
+      drawables.push({ y: this.acayY(acayEl), draw: () => this.drawAcay(renderer, ctx, acayEl) })
+    }
+
+    // Otros elementos (solo tras despertar, o siempre en campamento)
+    // Skip ocultos (hideFlag activo, ej. pickup ya recogido)
+    if (this.acayState === 'awake' || this._sceneId === 'campamento') {
+      for (const el of otherEls) {
+        if (el.isExit) continue // exits no tienen sprite
+        if (el.hideFlag && st.flags[el.hideFlag]) continue // oculto
+        drawables.push({ y: el.y, draw: () => this.drawElement(renderer, ctx, el) })
+      }
+      // Exit indicators (flechas sutiles)
+      for (const el of otherEls) {
+        if (el.isExit) drawables.push({ y: el.y, draw: () => this.drawExitIndicator(renderer, ctx, el) })
+      }
+    }
+
     drawables.sort((a, b) => a.y - b.y)
     for (const d of drawables) d.draw()
 
-    // Tooltip de hover (label del elemento)
+    // Tooltip de hover
     const hovered = st.hoveredElementId ? this.elements.find((e) => e.id === st.hoveredElementId) : null
-    if (hovered) {
+    if (hovered && this.fadeAlpha <= 0) {
       const bounce = Math.sin(ctx.time * 5) * 2
       const py = hovered.y - (hovered.hitH ?? 100) * (hovered.scale ?? 1) - 16 + bounce
       const label = hovered.label
       const w = renderer.textWidth(label, { size: 18, weight: 'bold' }) + 28
       renderer.roundRect(hovered.x - w / 2, py - 26, w, 34, 17, 'rgba(243,227,194,0.95)')
       renderer.text(label, hovered.x, py - 9, {
-        size: 18,
-        weight: 'bold',
-        color: PALETTE.tinta,
-        align: 'center',
-        baseline: 'middle',
-        font: 'serif',
+        size: 18, weight: 'bold', color: PALETTE.tinta,
+        align: 'center', baseline: 'middle', font: 'serif',
       })
     }
 
-    // Puntero customizado: ahora es React overlay (CustomCursor) para que
-    // quede por encima de diálogos/inventario. No se dibuja en canvas.
-
-    // Hint sutil (esquina sup-izq) — solo si no hay diálogo ni hover
-    if (!st.currentDialogue && !hovered) {
-      renderer.text(t('explore.hint'), 20, 28, {
-        size: 14,
-        color: 'rgba(243,227,194,0.6)',
-        align: 'left',
-        baseline: 'alphabetic',
-      })
+    // Fade overlay
+    if (this.fadeAlpha > 0.001) {
+      renderer.rect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT, '#000000', this.fadeAlpha)
     }
 
     renderer.vignette(0.2)
   }
 
-  /** Dibuja un elemento narrativo con highlight de hover. */
+  /** Y de Acay (fijo según el elemento, solo X es dinámica). */
+  private acayY(el: NarrativeElement): number {
+    return el.y
+  }
+
+  /** Dibuja Acay según estado + posición dinámica. */
+  private drawAcay(renderer: Renderer, ctx: ScreenContext<AcayGameState>, el: NarrativeElement): void {
+    const scale = el.scale ?? 1
+    const isHovered = ctx.state.hoveredElementId === 'acay'
+    const st = ctx.state
+
+    if (isHovered && this.acayState === 'unconscious') {
+      const hw = (el.hitW ?? 80) * scale
+      const hh = (el.hitH ?? 100) * scale
+      renderer.roundRect(this.acayX - hw / 2 - 6, el.y - hh - 6, hw + 12, hh + 12, 12, CONFIG.explore.hoverHighlight)
+    }
+
+    // Asset según estado
+    let assetId: string
+    if (this.acayState === 'unconscious') {
+      assetId = 'acay.unconscious'
+    } else if (st.flags.scene01AwakeningDone) {
+      assetId = 'acay.back'
+    } else {
+      assetId = 'acay.stand_front'
+    }
+
+    // Shake durante standing_up
+    let shakeX = 0
+    if (this.acayState === 'standing_up') {
+      const now = performance.now()
+      const remaining = (this.standUpUntilMs - now) / CONFIG.explore.standUpMs
+      const intensity = Math.max(0, remaining) * CONFIG.explore.standUpShakePx
+      shakeX = Math.sin(now / 30) * intensity
+    }
+
+    // Bob durante caminado
+    let bobY = 0
+    if (this.acayTargetX !== null) {
+      bobY = Math.abs(Math.sin(ctx.time * 8)) * 3
+    }
+
+    // Anim de respiración (unconscious)
+    let skewX = 0
+    if (this.acayState === 'unconscious') {
+      const anim = ctx.assets.getAnim(assetId)
+      if (anim) skewX = evalAnim(anim, ctx.time, phaseFromId('acay')).skewX
+    }
+
+    renderer.image(ctx.assets.get(assetId), this.acayX + shakeX, el.y - bobY, {
+      scale, skewX, flip: this.facing === -1,
+    })
+  }
+
+  /** Dibuja un elemento narrativo con highlight de hover + altAsset + blocked overlay. */
   private drawElement(renderer: Renderer, ctx: ScreenContext<AcayGameState>, el: NarrativeElement): void {
     const st = ctx.state
     const isHovered = st.hoveredElementId === el.id
     const scale = el.scale ?? 1
 
-    // Highlight de hover (resplandor detrás del sprite)
     if (isHovered) {
       const hw = (el.hitW ?? 80) * scale
       const hh = (el.hitH ?? 100) * scale
-      renderer.roundRect(
-        el.x - hw / 2 - 6, el.y - hh - 6,
-        hw + 12, hh + 12, 12,
-        CONFIG.explore.hoverHighlight,
-      )
+      renderer.roundRect(el.x - hw / 2 - 6, el.y - hh - 6, hw + 12, hh + 12, 12, CONFIG.explore.hoverHighlight)
     }
 
-    renderer.image(ctx.assets.get(el.asset), el.x, el.y, { scale })
+    // Asset: usar altAsset si el flag está activo (ej. gaucho despierto)
+    let assetId = el.asset
+    if (el.altAsset && st.flags[el.altAsset.flag]) {
+      assetId = el.altAsset.asset
+    }
+    if (assetId) {
+      renderer.image(ctx.assets.get(assetId), el.x, el.y, { scale })
+    }
+
+    // Indicador de bloqueado (overlay semitransparente) — dinámico
+    if (el.blocked && !st.flags.gauchoDialogueDone) {
+      const hw = (el.hitW ?? 80) * scale
+      const hh = (el.hitH ?? 100) * scale
+      renderer.rect(el.x - hw / 2, el.y - hh, hw, hh, 'rgba(0,0,0,0.3)')
+    }
   }
 
-}
+  /** Indicador sutil de salida (flecha direccional). */
+  private drawExitIndicator(renderer: Renderer, _ctx: ScreenContext<AcayGameState>, el: NarrativeElement): void {
+    const st = _ctx.state
+    const isHovered = st.hoveredElementId === el.id
+    const cx = el.x
+    const cy = el.y
+    const dir = el.id === 'left_exit' ? -1 : 1
+    const alpha = isHovered ? 0.8 : 0.3
+    const bounce = isHovered ? Math.sin(_ctx.time * 4) * 4 : 0
 
+    // Flecha
+    const save = renderer.ctx
+    save.save()
+    save.globalAlpha = alpha
+    save.fillStyle = PALETTE.dorado
+    save.beginPath()
+    const tipX = cx + dir * (20 + bounce)
+    save.moveTo(tipX, cy)
+    save.lineTo(cx, cy - 15)
+    save.lineTo(cx, cy + 15)
+    save.closePath()
+    save.fill()
+    save.restore()
+  }
+}

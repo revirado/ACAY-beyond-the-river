@@ -131,6 +131,34 @@ export class AudioManager {
     return this.muted
   }
 
+  /**
+   * Reproduce un efecto de sonido one-shot (mockup). Para sonidos puntuales
+   * como notas de guitarra, clicks, etc. Usa el AudioContext del motor.
+   * name: 'guitar' → nota pluck (triangle, decaimiento 0.3s).
+   */
+  playSfx(name: string): void {
+    if (!this.ctx || !this.master || !this.unlocked) return
+    const ctx = this.ctx
+    const now = ctx.currentTime
+    if (name === 'guitar') {
+      // Nota pluck: triangle, freq aleatoria pentatónica, decaimiento 0.3s
+      const notes = [196, 220, 247, 294, 330, 392] // G3 A3 B3 D4 E4 G4
+      const freq = notes[Math.floor(Math.random() * notes.length)]
+      const osc = ctx.createOscillator()
+      osc.type = 'triangle'
+      osc.frequency.value = freq
+      const g = ctx.createGain()
+      const peak = 0.15
+      g.gain.setValueAtTime(0.0001, now)
+      g.gain.linearRampToValueAtTime(peak, now + 0.005)
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.3)
+      osc.connect(g)
+      g.connect(this.master)
+      osc.start(now)
+      osc.stop(now + 0.35)
+    }
+  }
+
   dispose(): void {
     this.stop()
     if (this.ctx) {

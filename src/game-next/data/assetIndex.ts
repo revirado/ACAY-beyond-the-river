@@ -30,6 +30,14 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
   // ─── Acay (personaje principal) ───
   // De espaldas: poncho terracota + sombrero oscuro. Usado en batalla rítmica.
   'acay.back': { type: 'procedural', drawer: 'acay_back' },
+  // Inconsciente (tirado en el suelo, respirando). Asset con anim sutil.
+  'acay.unconscious': {
+    type: 'procedural',
+    drawer: 'acay_unconscious',
+    anim: { kind: 'pandeo', amplitude: 0.015, periodSec: 3 },
+  },
+  // De pie, frente (sombrero tapa rostro). Tras despertar.
+  'acay.stand_front': { type: 'procedural', drawer: 'acay_stand_front' },
 
   // ─── Antagonistas (siluetas mockup) ───
   'ant.ucumar': { type: 'procedural', drawer: 'antagonist_ucumar' },
@@ -47,9 +55,25 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
   'narrative.guitar': { type: 'procedural', drawer: 'narrative_guitar' },
   'narrative.relic': { type: 'procedural', drawer: 'narrative_relic' },
 
+  // ─── Escena 01: rocas en el río ───
+  'scene.rocks_in_river': { type: 'procedural', drawer: 'rocks_in_river' },
+
+  // ─── Escena 02: Campamento del Gaucho ───
+  'scene.campamento_background': { type: 'procedural', drawer: 'campamento_background' },
+  'prop.gaucho_sleeping': { type: 'procedural', drawer: 'gaucho_sleeping' },
+  'prop.gaucho_awake': { type: 'procedural', drawer: 'gaucho_awake' },
+  'prop.cardon': { type: 'procedural', drawer: 'cardon' },
+  'prop.kettle': { type: 'procedural', drawer: 'kettle' },
+  'prop.wood_pile': { type: 'procedural', drawer: 'wood_pile' },
+  'prop.firepit_ashes': { type: 'procedural', drawer: 'firepit_ashes' },
+
   // ─── UI: iconos de inventario (placeholders SVG) ───
   'ui.item_guitar': { type: 'placeholder', label: 'Guitarra', color: '#a3552f' },
   'ui.item_relic': { type: 'placeholder', label: 'Reliquia', color: '#d9a83f' },
+  'ui.item_pava': { type: 'placeholder', label: 'Pava', color: '#6e7474' },
+  'ui.item_wood': { type: 'placeholder', label: 'Maderas', color: '#7c5230' },
+  'ui.item_poncho': { type: 'placeholder', label: 'Poncho', color: '#a3552f' },
+  'ui.item_lentes': { type: 'placeholder', label: 'Lentes', color: '#9aa0a0' },
 
   // ─── Audio (mockup: procedural, sin pistas reales todavía) ───
   'audio.music_explore': { type: 'procedural' },

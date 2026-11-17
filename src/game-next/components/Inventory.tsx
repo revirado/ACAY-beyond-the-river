@@ -7,6 +7,7 @@ import { AssetImg } from './AssetImg'
 import { PALETTE } from '@/game-next/core/config'
 import { CONTROLS } from '@/game-next/core/controls'
 import { t } from '@/engine/i18n'
+import { getEngine } from '@/engine/core/engineBridge'
 
 /**
  * Inventory — sistema de inventario (botón toggle + ventana modal centrada).
@@ -128,7 +129,13 @@ export function Inventory() {
                 {inventory.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col items-center gap-1.5 rounded-lg border p-2"
+                    onClick={() => {
+                      // Guitarra → reproducir nota musical
+                      if (item.id === 'guitar') {
+                        getEngine()?.audio.playSfx('guitar')
+                      }
+                    }}
+                    className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border p-2 transition hover:bg-amber-200/20"
                     style={{
                       borderColor: 'rgba(124,82,48,0.3)',
                       background: 'rgba(243,227,194,0.4)',

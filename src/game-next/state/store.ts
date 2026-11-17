@@ -18,6 +18,9 @@ const initialSnapshot: AcaySnapshot = {
   inventory: [],
   battle: null,
   hoveredElementId: null,
+  uiUnlocked: false,
+  inventoryUnlocked: false,
+  objective: null,
 }
 
 export const useGameStore = createGameStore<AcaySnapshot>(initialSnapshot)
