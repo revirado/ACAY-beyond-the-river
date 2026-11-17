@@ -24,6 +24,9 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
   // ─── Logo del estudio (ÚNICO asset real conservado) ───
   'ui.studio_logo': { type: 'file', src: '/assets/ui/wrongmeca.png' },
 
+  // ─── Logo del título del juego (placeholder de texto; reemplazable por imagen) ───
+  'ui.title_logo': { type: 'procedural', drawer: 'title_logo' },
+
   // ─── Acay (personaje principal) ───
   // De espaldas: poncho terracota + sombrero oscuro. Usado en batalla rítmica.
   'acay.back': { type: 'procedural', drawer: 'acay_back' },
@@ -41,6 +44,8 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
   'narrative.tree': { type: 'procedural', drawer: 'narrative_tree' },
   'narrative.ruin': { type: 'procedural', drawer: 'narrative_ruin' },
   'narrative.coquena': { type: 'procedural', drawer: 'narrative_coquena' },
+  'narrative.guitar': { type: 'procedural', drawer: 'narrative_guitar' },
+  'narrative.relic': { type: 'procedural', drawer: 'narrative_relic' },
 
   // ─── UI: iconos de inventario (placeholders SVG) ───
   'ui.item_guitar': { type: 'placeholder', label: 'Guitarra', color: '#a3552f' },

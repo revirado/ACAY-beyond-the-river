@@ -371,6 +371,117 @@ const narrativeCoquena: DrawerDef = {
   },
 }
 
+/* ────────────────────── Logo del título (placeholder de texto) ────────────────────── */
+
+/**
+ * title_logo: placeholder del título del juego. Dibuja "ACAY" (grande,
+ * serif, blanco) centrado arriba y "Beyond the river" (más chico, debajo).
+ * Reemplazable por una imagen real via el índice:
+ *   'ui.title_logo': { type: 'file', src: '/assets/ui/title.png' }
+ */
+const titleLogo: DrawerDef = {
+  w: 800,
+  h: 280,
+  draw(ctx: C, w: number, h: number): void {
+    const cx = w / 2
+    // "ACAY" — grande, serif, blanco
+    ctx.save()
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 120px Georgia, "Times New Roman", serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    // Sombra sutil
+    ctx.shadowColor = 'rgba(0,0,0,0.5)'
+    ctx.shadowBlur = 8
+    ctx.shadowOffsetY = 3
+    ctx.fillText('ACAY', cx, h * 0.38)
+    ctx.restore()
+    // "Beyond the river" — más chico, debajo
+    ctx.save()
+    ctx.fillStyle = 'rgba(230,182,85,0.9)'
+    ctx.font = 'italic 32px Georgia, "Times New Roman", serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('Beyond the river', cx, h * 0.72)
+    ctx.restore()
+  },
+}
+
+/* ────────────────────── Elementos pickup (guitarra, reliquia) ────────────────────── */
+
+const narrativeGuitar: DrawerDef = {
+  w: 70, h: 100,
+  draw(ctx: C, w: number, h: number): void {
+    const cx = w / 2
+    // Sombra
+    ctx.save()
+    ctx.globalAlpha = 0.3
+    ctx.beginPath()
+    ctx.ellipse(cx, h - 4, w * 0.35, 4, 0, 0, Math.PI * 2)
+    ctx.fillStyle = '#000'
+    ctx.fill()
+    ctx.restore()
+    // Cuerpo (óvalo terracota)
+    ctx.beginPath()
+    ctx.ellipse(cx, h * 0.65, w * 0.32, h * 0.25, 0, 0, Math.PI * 2)
+    ctx.fillStyle = PALETTE.poncho
+    ctx.fill()
+    // Mástil (rect marrón)
+    rect(ctx, cx - 4, h * 0.1, 8, h * 0.45, PALETTE.sombrero)
+    // Cabeza
+    rect(ctx, cx - 6, h * 0.05, 12, 8, PALETTE.sombreroAla)
+    // Puente (línea oscura)
+    rect(ctx, cx - 8, h * 0.7, 16, 3, PALETTE.sombrero)
+    // Cuerdas (líneas finas)
+    ctx.save()
+    ctx.strokeStyle = '#f3e3c2'
+    ctx.lineWidth = 0.8
+    for (let i = -2; i <= 2; i++) {
+      ctx.beginPath()
+      ctx.moveTo(cx + i, h * 0.1)
+      ctx.lineTo(cx + i * 1.5, h * 0.78)
+      ctx.stroke()
+    }
+    ctx.restore()
+  },
+}
+
+const narrativeRelic: DrawerDef = {
+  w: 50, h: 60,
+  draw(ctx: C, w: number, h: number): void {
+    const cx = w / 2
+    // Sombra
+    ctx.save()
+    ctx.globalAlpha = 0.3
+    ctx.beginPath()
+    ctx.ellipse(cx, h - 4, w * 0.3, 4, 0, 0, Math.PI * 2)
+    ctx.fillStyle = '#000'
+    ctx.fill()
+    ctx.restore()
+    // Reliquia (piedra tallada dorada)
+    poly(ctx, [
+      [cx - 16, h - 8], [cx - 14, h * 0.3], [cx - 6, 8],
+      [cx + 6, 8], [cx + 14, h * 0.3], [cx + 16, h - 8],
+    ], PALETTE.dorado)
+    // Símbolo tallado (línea oscura)
+    ctx.save()
+    ctx.strokeStyle = PALETTE.sombrero
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(cx - 8, h * 0.4)
+    ctx.lineTo(cx + 8, h * 0.4)
+    ctx.moveTo(cx, h * 0.3)
+    ctx.lineTo(cx, h * 0.7)
+    ctx.stroke()
+    ctx.restore()
+    // Brillo
+    ctx.save()
+    ctx.globalAlpha = 0.4
+    poly(ctx, [[cx - 10, h - 10], [cx - 8, h * 0.35], [cx - 3, h * 0.35], [cx - 5, h - 10]], '#fff')
+    ctx.restore()
+  },
+}
+
 /* ────────────────────── Registro ────────────────────── */
 
 export const DRAWERS: Record<string, DrawerDef> = {
@@ -383,4 +494,7 @@ export const DRAWERS: Record<string, DrawerDef> = {
   narrative_tree: narrativeTree,
   narrative_ruin: narrativeRuin,
   narrative_coquena: narrativeCoquena,
+  title_logo: titleLogo,
+  narrative_guitar: narrativeGuitar,
+  narrative_relic: narrativeRelic,
 }

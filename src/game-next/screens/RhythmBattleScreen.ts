@@ -6,6 +6,7 @@ import type { AcayGameState } from '@/game-next/state/gameState'
 import type { RhythmTab, RhythmBattleState } from '@/game-next/core/types'
 import { CONFIG, PALETTE } from '@/game-next/core/config'
 import { ANTAGONISTS } from '@/game-next/data/scene'
+import { PerspectiveTrack } from '@/engine/rhythm/PerspectiveTrack'
 import { t } from '@/engine/i18n'
 
 /**
@@ -41,12 +42,20 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
   private acayLaneVisual = 1
   /** Flag de fin para no re-disparar requestSwitch. */
   private finished = false
+  /** Sistema del motor: pista en perspectiva (math reutilizable). */
+  private track: PerspectiveTrack = new PerspectiveTrack(
+    CONFIG.rhythm.track,
+    CONFIG.rhythm.tabTravelSec,
+    CONFIG.rhythm.trackCurveExp,
+  )
 
   enter(ctx: ScreenContext<AcayGameState>, params?: unknown): void {
     const p = (params ?? {}) as { antagonistId?: string }
     const antId = p.antagonistId ?? 'shadow'
     const ant = ANTAGONISTS[antId] ?? ANTAGONISTS.shadow
     const cfg = CONFIG.rhythm
+    // Refrescar el track con la config actual (por si cambió).
+    this.track = new PerspectiveTrack(cfg.track, cfg.tabTravelSec, cfg.trackCurveExp)
 
     // Generar schedule de tabs mockup
     const tabs: RhythmTab[] = []
@@ -182,58 +191,49 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
       anchor: 'center',
     })
 
-    // Geometría de la pista (perspectiva)
-    const cx = VIRTUAL_WIDTH / 2
-    const topY = VIRTUAL_HEIGHT * 0.15
-    const botY = VIRTUAL_HEIGHT * 0.92
-    const topHalfW = VIRTUAL_WIDTH * 0.12
-    const botHalfW = VIRTUAL_WIDTH * 0.42
-    const hitY = botY - 30
+    const track = this.track
+    const hitY = track.hitY
 
-    // Lane centers en función de la profundidad p (0=far/top, 1=near/bottom)
-    const laneCenterAt = (lane: number, p: number): number => {
-      const halfW = topHalfW + (botHalfW - topHalfW) * p
-      const t = battle.lanes === 1 ? 0.5 : lane / (battle.lanes - 1)
-      return cx - halfW + t * halfW * 2
-    }
-    const yAt = (p: number): number => topY + (hitY - topY) * p
-
-    // ── Tabs descendiendo ──
+    // ── Tabs descendiendo (posición via PerspectiveTrack del motor) ──
+    // El track aplica curva de perspectiva: lento lejos, rápido cerca.
     for (const tab of battle.tabs) {
-      const p = Math.max(0, Math.min(1.05, (elapsed - (tab.hitTime - cfg.tabTravelSec)) / cfg.tabTravelSec))
-      if (p <= 0) continue // aún no apareció
-      const x = laneCenterAt(tab.lane, p)
-      const y = yAt(p)
-      const size = 12 + p * 26 // crece con la cercanía
+      if (!track.isVisible(tab.hitTime, elapsed)) continue
+      const p = track.progress(tab.hitTime, elapsed)
+      const pos = track.position(p, tab.lane, battle.lanes)
+      // Tamaño base del tab escalado por la perspectiva (crece con cercanía)
+      const baseW = 38
+      const baseH = 18
+      const w = baseW * pos.scale
+      const h = baseH * pos.scale
       const color = tab.ghost ? PALETTE.tabGhost : (tab.lane === battle.acayLane ? PALETTE.tabHit : PALETTE.tab)
       const alpha = Math.min(1, p * 2) * (tab.ghost ? 0.5 : 1)
-      renderer.roundRect(x - size / 2, y - size / 4, size, size / 2, 4, color, alpha)
+      renderer.roundRect(pos.x - w / 2, pos.y - h / 2, w, h, 4 * pos.scale, color, alpha)
       // Brillo del tab (no ghosts)
       if (!tab.ghost) {
-        renderer.roundRect(x - size / 2, y - size / 4, size, 2, PALETTE.dorado, alpha * 0.7)
+        renderer.roundRect(pos.x - w / 2, pos.y - h / 2, w, 2 * pos.scale, PALETTE.dorado, alpha * 0.7)
       }
     }
 
-    // Resolved (flash de hit/dodge)
+    // Resolved (flash de hit/dodge) — en el hit line
     for (const r of this.resolved) {
       const age = (performance.now() - r.resolveMs) / 400
       const alpha = (1 - age) * 0.6
-      const x = laneCenterAt(r.tab.lane, 1)
-      const y = hitY
+      const pos = track.position(1, r.tab.lane, battle.lanes)
       if (r.result === 'hit') {
-        renderer.ellipse(x, y, 30 + age * 20, 30 + age * 20, PALETTE.tabHit, alpha)
+        renderer.ellipse(pos.x, hitY, 30 + age * 20, 30 + age * 20, PALETTE.tabHit, alpha)
       } else {
-        renderer.ellipse(x, y, 20 + age * 15, 20 + age * 15, PALETTE.dorado, alpha)
+        renderer.ellipse(pos.x, hitY, 20 + age * 15, 20 + age * 15, PALETTE.dorado, alpha)
       }
     }
 
     // ── Línea de hit (donde Acay esquiva) ──
-    const hitHalfW = botHalfW * 0.92
-    renderer.rect(cx - hitHalfW, hitY - 2, hitHalfW * 2, 3, PALETTE.acento, 0.7)
+    const hitHalfW = track.geom.botHalfW * 0.92
+    renderer.rect(track.geom.cx - hitHalfW, hitY - 2, hitHalfW * 2, 3, PALETTE.acento, 0.7)
 
     // ── Primer plano: Acay de espaldas en su lane ──
-    const acayX = laneCenterAt(this.acayLaneVisual, 1)
-    const acayY = botY - 10
+    const acayPos = track.position(1, this.acayLaneVisual, battle.lanes)
+    const acayX = acayPos.x
+    const acayY = track.geom.botY - 10
     try {
       const acayImg = ctx.assets.get('acay.back')
       const acaySize = ctx.assets.getSize('acay.back')

@@ -14,6 +14,7 @@ import { CONFIG } from '@/game-next/core/config'
 import { getLocale } from '@/engine/i18n'
 
 import { StudioScreen } from '@/game-next/screens/StudioScreen'
+import { TitleScreen } from '@/game-next/screens/TitleScreen'
 import { ExploreScreen } from '@/game-next/screens/ExploreScreen'
 import { RhythmBattleScreen } from '@/game-next/screens/RhythmBattleScreen'
 
@@ -29,6 +30,7 @@ const ACAY_LOCALES: LocaleEntry[] = [
 /** Música por pantalla (mockup: sin pistas todavía → silencio). */
 const MUSIC_BY_SCREEN: Record<ScreenId, MusicTrackId | undefined> = {
   studio: 'explore',
+  title: 'explore',
   explore: 'explore',
   'rhythm-battle': 'battle',
 }
@@ -123,6 +125,7 @@ export const acayModule: GameModule<AcayState, AcaySnapshot> = {
   createScreens(_ctx: ScreenContext<AcayState>): GameScreen[] {
     return [
       new StudioScreen(),
+      new TitleScreen(),
       new ExploreScreen(),
       new RhythmBattleScreen(),
     ]

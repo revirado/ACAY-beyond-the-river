@@ -81,7 +81,7 @@ export function GameRoot({ devMode = false }: { devMode?: boolean }) {
 
   return (
     <main
-      aria-label="Something Far Greater"
+      aria-label="ACAY"
       className="flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#191007] p-4"
     >
       <div

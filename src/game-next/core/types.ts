@@ -8,7 +8,7 @@
 import type { BaseUISnapshot, WorldObjectDef } from '@/engine/core/types'
 
 /** Pantallas del juego Acay. */
-export type ScreenId = 'studio' | 'explore' | 'rhythm-battle'
+export type ScreenId = 'studio' | 'title' | 'explore' | 'rhythm-battle'
 
 /** Fase de la caja de diálogo (UI React). */
 export type DialoguePhase = 'idle' | 'narration' | 'conversation'
@@ -47,6 +47,18 @@ export interface NarrativeElement {
   dialogue?: DialogueLine[]
   /** Si al clic inicia una batalla rítmica (id del antagonista). */
   triggersBattle?: string
+  /**
+   * Si al clic recoge un item (lo añade al inventario si no está).
+   * Solo para elementos no-personaje (isCharacter=false).
+   */
+  pickup?: {
+    itemId: string
+    label: string
+    icon: string
+    description: string
+    /** Texto de narración al recoger el item (primera vez). */
+    pickupText: string
+  }
 }
 
 /** Línea de diálogo. Acay balbucea (isAcay=true → texto incomprensible). */

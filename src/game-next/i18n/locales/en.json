@@ -18,7 +18,9 @@
   },
   "items": {
     "guitar": "guitar",
-    "relic": "relic"
+    "relic": "relic",
+    "guitar_cap": "Guitar",
+    "relic_cap": "Relic"
   },
   "battle": {
     "title": "Rhythm duel",
@@ -42,7 +44,19 @@
     "ruin_inspect": "Adobe walls that time brought down. Someone lived here; now only dust remains.",
     "coquena_label": "Coquena",
     "coquena_hover": "A hunched figure by the fire.",
-    "coquena_inspect": "Coquena, the merchant and protector deity. Watches you without haste."
+    "coquena_inspect": "Coquena, the merchant and protector deity. Watches you without haste.",
+    "guitar_label": "Old guitar",
+    "guitar_hover": "A forgotten guitar among the stones.",
+    "guitar_inspect": "An old guitar, strings nearly intact. Someone left it here.",
+    "guitar_inspect_have": "You already have the guitar. Strings hum in the wind.",
+    "guitar_desc": "An old guitar found on the riverbank.",
+    "guitar_pickup": "You picked up an old guitar. Might be useful later.",
+    "relic_label": "Relic",
+    "relic_hover": "A stone carved with ancient symbols.",
+    "relic_inspect": "A stone relic with a symbol you do not recognize. It radiates warmth.",
+    "relic_inspect_have": "You already have the relic. Coquena might be interested.",
+    "relic_desc": "A relic carved in stone.",
+    "relic_pickup": "You picked up a carved relic. Warm to the touch."
   },
   "dialogues": {
     "coquena_greeting": {
@@ -54,5 +68,8 @@
       "l4_acay": "… …",
       "l5_coquena": "If you wish to cross, you will need more than courage. Search the riverbank."
     }
+  },
+  "inventory": {
+    "title": "Inventory"
   }
 }

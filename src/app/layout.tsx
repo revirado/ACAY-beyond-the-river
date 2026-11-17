@@ -13,10 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Something Far Greater — PoC — WrongMeca Studios",
+  title: "ACAY — Beyond the River — WrongMeca Studios",
   description:
-    "PoC of a cozy 2D trading game: explore a village, gather resources, trade and make your villa prosper. Next.js + Canvas 2D with a swappable asset index.",
-  keywords: ["game", "cozy", "trading", "PoC", "Next.js", "Canvas 2D"],
+    "ACAY / Beyond the River: una aventura gráfica de exploración + duelos rítmicos de esquive. Valles Calchaquíes, NOA. Next.js + Canvas 2D con motor propio.",
+  keywords: ["game", "acay", "adventure", "rhythm", "NOA", "Next.js", "Canvas 2D"],
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >

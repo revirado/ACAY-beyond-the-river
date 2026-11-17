@@ -65,6 +65,40 @@ export function buildSceneElements(): NarrativeElement[] {
       isCharacter: true,
       triggersBattle: 'ucumar',
     },
+    {
+      id: 'guitar_find',
+      asset: 'narrative.guitar',
+      x: 180, y: 660, scale: 1.0,
+      hitW: 80, hitH: 100,
+      label: t('narrative.guitar_label'),
+      hoverText: t('narrative.guitar_hover'),
+      inspectText: t('narrative.guitar_inspect_have'),
+      isCharacter: false,
+      pickup: {
+        itemId: 'guitar',
+        label: t('items.guitar_cap'),
+        icon: 'ui.item_guitar',
+        description: t('narrative.guitar_desc'),
+        pickupText: t('narrative.guitar_pickup'),
+      },
+    },
+    {
+      id: 'relic_find',
+      asset: 'narrative.relic',
+      x: 1120, y: 670, scale: 1.0,
+      hitW: 60, hitH: 70,
+      label: t('narrative.relic_label'),
+      hoverText: t('narrative.relic_hover'),
+      inspectText: t('narrative.relic_inspect_have'),
+      isCharacter: false,
+      pickup: {
+        itemId: 'relic',
+        label: t('items.relic_cap'),
+        icon: 'ui.item_relic',
+        description: t('narrative.relic_desc'),
+        pickupText: t('narrative.relic_pickup'),
+      },
+    },
   ]
 }
 

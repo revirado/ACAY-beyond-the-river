@@ -96,6 +96,27 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
           st.dialogueIndex = 0
           st.dialoguePhase = 'conversation'
           ctx.syncUI()
+        } else if (hovered.pickup) {
+          // Elemento pickup: recoge item si no lo tiene, si no inspección normal
+          if (!st.hasItem(hovered.pickup.itemId)) {
+            st.addItem({
+              id: hovered.pickup.itemId,
+              label: hovered.pickup.label,
+              icon: hovered.pickup.icon,
+              description: hovered.pickup.description,
+            })
+            st.currentDialogue = [
+              { speaker: hovered.label, text: hovered.pickup.pickupText },
+            ]
+          } else {
+            // Ya lo tiene → inspección normal
+            st.currentDialogue = [
+              { speaker: hovered.label, text: hovered.inspectText },
+            ]
+          }
+          st.dialogueIndex = 0
+          st.dialoguePhase = 'narration'
+          ctx.syncUI()
         } else {
           // Inspección (narración de una sola línea)
           st.currentDialogue = [
@@ -151,11 +172,8 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
       })
     }
 
-    // Puntero customizado (solo si no hay diálogo — durante diálogo el click avanza)
-    const ptr = ctx.input.getPointerPos()
-    if (ptr) {
-      this.drawCustomCursor(renderer, ctx, ptr, !!hovered)
-    }
+    // Puntero customizado: ahora es React overlay (CustomCursor) para que
+    // quede por encima de diálogos/inventario. No se dibuja en canvas.
 
     // Hint sutil (esquina sup-izq) — solo si no hay diálogo ni hover
     if (!st.currentDialogue && !hovered) {
@@ -190,27 +208,5 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
     renderer.image(ctx.assets.get(el.asset), el.x, el.y, { scale })
   }
 
-  /** Puntero customizado: cruz/anillo terracota. Cambia al hover (más lleno). */
-  private drawCustomCursor(renderer: Renderer, _ctx: ScreenContext<AcayGameState>, pos: { x: number; y: number }, overElement: boolean): void {
-    const c = CONFIG.explore.cursorColor
-    const r = CONFIG.explore.cursorSize
-    if (overElement) {
-      // Anillo lleno (interactuable)
-      renderer.ellipse(pos.x, pos.y, r + 2, r + 2, 'rgba(230,182,85,0.3)')
-      renderer.ellipse(pos.x, pos.y, r, r, c)
-      renderer.ellipse(pos.x, pos.y, r - 4, r - 4, PALETTE.pergamino)
-    } else {
-      // Anillo hueco (default)
-      renderer.ellipse(pos.x, pos.y, r, r, 'rgba(201,111,74,0.3)')
-      // contorno
-      const save = renderer.ctx
-      save.strokeStyle = c
-      save.lineWidth = 2.5
-      save.beginPath()
-      save.arc(pos.x, pos.y, r, 0, Math.PI * 2)
-      save.stroke()
-      // punto central
-      renderer.ellipse(pos.x, pos.y, 2, 2, c)
-    }
-  }
 }
+

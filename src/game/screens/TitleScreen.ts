@@ -44,7 +44,7 @@ export class TitleScreen implements GameScreen {
     // Marco decorativo del título
     const cx = VIRTUAL_WIDTH / 2
     renderer.roundRect(cx - 420, 150, 840, 200, 24, 'rgba(63,45,29,0.55)')
-    renderer.text('Something Far Greater', cx, 240, {
+    renderer.text('ACAY', cx, 240, {
       size: 74,
       font: 'serif',
       weight: 'bold',

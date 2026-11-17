@@ -10,6 +10,8 @@ import { t } from '@/engine/i18n'
 import { acayModule } from '@/game-next/core/module'
 import { DialogueBox } from '@/game-next/components/DialogueBox'
 import { InventoryBox } from '@/game-next/components/InventoryBox'
+import { CustomCursor } from '@/game-next/components/CustomCursor'
+import { LanguageSwitch } from '@/game-next/components/LanguageSwitch'
 
 /**
  * AcayHost — monta el motor con `acayModule` sobre el canvas y compone los
@@ -108,14 +110,17 @@ export function AcayHost({ devMode = false }: { devMode?: boolean }) {
           <>
             {hasDialogue && <DialogueBox />}
             <InventoryBox />
+            <LanguageSwitch />
           </>
         )}
         {ready && screen === 'rhythm-battle' && (
           <>
             {/* El HUD de batalla se dibuja en canvas (RhythmBattleScreen.drawHud). */}
-            {/* InventoryBox oculto en batalla (no es relevante). */}
           </>
         )}
+
+        {/* Puntero customizado: por encima de todo (z-50). Solo en explore/battle. */}
+        {ready && (screen === 'explore' || screen === 'rhythm-battle') && <CustomCursor />}
 
         {/* devMode badge */}
         {ready && devMode && (

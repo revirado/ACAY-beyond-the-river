@@ -71,6 +71,29 @@ export const CONFIG = {
     fadeOutMs: 700,
   },
 
+  /**
+   * Pantalla de título del juego.
+   * Fondo negro + asset del título (placeholder de texto "ACAY" / "Beyond the river").
+   * Secuencia de fades:
+   *   1. fadeIn: bg + título aparecen juntos.
+   *   2. hold: ambos full.
+   *   3. bgFadeOut: el fondo negro hace fade out PRIMERO (el título sigue full).
+   *   4. titleFadeOut: el título hace fade out DESPUÉS.
+   *   5. delay: 1s con pantalla vacía.
+   *   6. → explore.
+   * Saltable con Enter/Space/ESC/clic.
+   */
+  title: {
+    background: '#000000',
+    titleAsset: 'ui.title_logo',
+    titleScale: 1.0,
+    fadeInMs: 800,
+    holdMs: 1500,
+    bgFadeOutMs: 600,
+    titleFadeOutMs: 600,
+    delayMs: 1000,
+  },
+
   /** Exploración POV. */
   explore: {
     /** Color del puntero customizado. */
@@ -102,6 +125,16 @@ export const CONFIG = {
     ghostChance: 0.2,
     /** Anticipación: tiempo desde que un tab aparece (lejos) hasta que llega (segundos). */
     tabTravelSec: 2.5,
+    /** Exponente de la curva de perspectiva del track (>1 = lento lejos, rápido cerca). */
+    trackCurveExp: 2.2,
+    /** Geometría de la pista en perspectiva (coords virtuales). */
+    track: {
+      cx: 640,            // VIRTUAL_WIDTH / 2
+      topY: 108,          // VIRTUAL_HEIGHT * 0.15 (punto de fuga)
+      botY: 662,          // VIRTUAL_HEIGHT * 0.92 (hit line)
+      topHalfW: 154,      // VIRTUAL_WIDTH * 0.12 (angosta lejos)
+      botHalfW: 538,      // VIRTUAL_WIDTH * 0.42 (ancha cerca)
+    },
   },
 
   /** Franja inferior ocupada por diálogos/inventario (React overlays). */

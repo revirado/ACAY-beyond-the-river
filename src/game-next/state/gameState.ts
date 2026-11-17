@@ -20,11 +20,8 @@ import type {
  *   - battle: estado de batalla rítmica (null si no hay).
  */
 export class AcayGameState extends GameState {
-  /** Inventario del jugador (mockup: 2 items iniciales para demo). */
-  inventory: InventoryItem[] = [
-    { id: 'guitar', label: 'Guitarra', icon: 'ui.item_guitar', description: 'Una guitarra vieja encontrada en la ribera.' },
-    { id: 'relic', label: 'Reliquia', icon: 'ui.item_relic', description: 'Una reliquia tallada en piedra.' },
-  ]
+  /** Inventario del jugador (empieza vacío — los items se recogen en la escena). */
+  inventory: InventoryItem[] = []
 
   /** Flags narrativos (eventos vistos, acertijos resueltos, etc.). */
   flags: Record<string, boolean> = {}
@@ -44,10 +41,7 @@ export class AcayGameState extends GameState {
 
   /** Reinicio completo (nueva partida). */
   reset(): void {
-    this.inventory = [
-      { id: 'guitar', label: 'Guitarra', icon: 'ui.item_guitar', description: 'Una guitarra vieja encontrada en la ribera.' },
-      { id: 'relic', label: 'Reliquia', icon: 'ui.item_relic', description: 'Una reliquia tallada en piedra.' },
-    ]
+    this.inventory = []
     this.flags = {}
     this.currentDialogue = null
     this.dialogueIndex = 0
@@ -55,5 +49,17 @@ export class AcayGameState extends GameState {
     this.battle = null
     this.hoveredElementId = null
     this.markChanged()
+  }
+
+  /** Añade un item al inventario si no está ya. Devuelve true si lo añadió. */
+  addItem(item: InventoryItem): boolean {
+    if (this.inventory.some((i) => i.id === item.id)) return false
+    this.inventory.push(item)
+    return true
+  }
+
+  /** ¿Tiene el item con ese id? */
+  hasItem(itemId: string): boolean {
+    return this.inventory.some((i) => i.id === itemId)
   }
 }

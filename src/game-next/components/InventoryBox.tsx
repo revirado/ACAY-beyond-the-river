@@ -32,7 +32,7 @@ export function InventoryBox() {
           className="mb-1.5 px-1 text-[10px] font-bold uppercase tracking-widest"
           style={{ color: PALETTE.dorado }}
         >
-          {t('items.guitar') === 'guitarra' ? 'Mochila' : 'Pouch'}
+          {t('inventory.title')}
         </div>
         <div className="flex gap-1.5">
           {inventory.map((item) => (

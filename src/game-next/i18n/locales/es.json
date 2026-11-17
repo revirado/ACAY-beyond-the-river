@@ -18,7 +18,9 @@
   },
   "items": {
     "guitar": "guitarra",
-    "relic": "reliquia"
+    "relic": "reliquia",
+    "guitar_cap": "Guitarra",
+    "relic_cap": "Reliquia"
   },
   "battle": {
     "title": "Duelo rítmico",
@@ -42,7 +44,19 @@
     "ruin_inspect": "Muros de adobe que el tiempo derrumbó. Alguien vivió aquí; ahora solo queda polvo.",
     "coquena_label": "Coquena",
     "coquena_hover": "Una figura encorvada junto al fuego.",
-    "coquena_inspect": "Coquena, el mercader y deidad protectora. Te observa sin prisa."
+    "coquena_inspect": "Coquena, el mercader y deidad protectora. Te observa sin prisa.",
+    "guitar_label": "Guitarra vieja",
+    "guitar_hover": "Una guitarra olvidada entre las piedras.",
+    "guitar_inspect": "Una guitarra vieja, las cuerdas casi intactas. Alguien la dejó aquí.",
+    "guitar_inspect_have": "Ya tienes la guitarra. Las cuerdas vibran al viento.",
+    "guitar_desc": "Una guitarra vieja encontrada en la ribera.",
+    "guitar_pickup": "Recogiste una guitarra vieja. Tal vez tenga uso más adelante.",
+    "relic_label": "Reliquia",
+    "relic_hover": "Una piedra tallada con símbolos antiguos.",
+    "relic_inspect": "Una reliquia de piedra con un símbolo que no reconoces. Irradia calor.",
+    "relic_inspect_have": "Ya tienes la reliquia. Coquena podría interesarse.",
+    "relic_desc": "Una reliquia tallada en piedra.",
+    "relic_pickup": "Recogiste una reliquia tallada. Pulsa cálida."
   },
   "dialogues": {
     "coquena_greeting": {
@@ -54,5 +68,8 @@
       "l4_acay": "… …",
       "l5_coquena": "Si quieres cruzar, necesitarás más que valor. Busca en la ribera."
     }
+  },
+  "inventory": {
+    "title": "Inventario"
   }
 }

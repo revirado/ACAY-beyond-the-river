@@ -84,7 +84,7 @@ export class IntroScreen implements GameScreen {
 
     // Título con aparición suave
     const titleAlpha = Math.min(1, this.t / 1.6)
-    renderer.text('Something Far Greater', VIRTUAL_WIDTH / 2, 130, {
+    renderer.text('ACAY', VIRTUAL_WIDTH / 2, 130, {
       size: 58,
       font: 'serif',
       weight: 'bold',
