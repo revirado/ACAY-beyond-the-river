@@ -1,11 +1,58 @@
 {
   "common": {
     "loading": "Cargando…",
-    "ready": "LISTO PARA NUEVO JUEGO"
+    "start": "Comenzar aventura",
+    "devNote": "Demo — arte mockup"
   },
-  "placeholder": {
-    "title": "NUEVO JUEGO — STUB",
-    "subtitle": "Esperando brief detallado",
-    "hint": "El motor está corriendo. Las mecánicas del juego se implementarán aquí cuando llegue el brief."
+  "studio": {
+    "title": "WrongMeca Studios"
+  },
+  "explore": {
+    "title": "Más allá del río Calchaquí",
+    "hint": "Move el puntero. Hover sobre elementos para inspeccionar. Clic para interactuar."
+  },
+  "dialogue": {
+    "acayBabble": "…",
+    "continue": "Continuar",
+    "close": "Cerrar"
+  },
+  "items": {
+    "guitar": "guitarra",
+    "relic": "reliquia"
+  },
+  "battle": {
+    "title": "Duelo rítmico",
+    "hp": "Vida",
+    "dodges": "Esquives",
+    "hits": "Golpes",
+    "dodge": "¡Esquiva! (←/→)",
+    "victory": "¡Sobreviviste!",
+    "defeat": "Caíste…",
+    "exit": "ESC para volver"
+  },
+  "narrative": {
+    "rock_label": "Piedra",
+    "rock_hover": "Una piedra lisa junto al camino.",
+    "rock_inspect": "Una piedra lisa, pulida por el viento. Hay marcas talladas que no alcanzas a descifrar.",
+    "tree_label": "Árbol seco",
+    "tree_hover": "Un árbol seco, sin hojas.",
+    "tree_inspect": "Un algarrobo seco. Su sombra cobija piedras que alguien apiló con cuidado.",
+    "ruin_label": "Ruina",
+    "ruin_hover": "Paredes de adobe derruidas.",
+    "ruin_inspect": "Muros de adobe que el tiempo derrumbó. Alguien vivió aquí; ahora solo queda polvo.",
+    "coquena_label": "Coquena",
+    "coquena_hover": "Una figura encorvada junto al fuego.",
+    "coquena_inspect": "Coquena, el mercader y deidad protectora. Te observa sin prisa."
+  },
+  "dialogues": {
+    "coquena_greeting": {
+      "speaker_coquena": "Coquena",
+      "speaker_acay": "Acay",
+      "l1_coquena": "Llegaste lejos, pequeño. El río no se cruza con hambre, sino con ingenio.",
+      "l2_acay": "…",
+      "l3_coquena": "No te entiendo, pero te conozco. El espíritu que te guía… también me es familiar.",
+      "l4_acay": "… …",
+      "l5_coquena": "Si quieres cruzar, necesitarás más que valor. Busca en la ribera."
+    }
   }
 }

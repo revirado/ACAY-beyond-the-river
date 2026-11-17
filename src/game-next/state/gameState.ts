@@ -1,23 +1,55 @@
 import { GameState } from '@/engine/state/GameState'
+import type {
+  InventoryItem,
+  DialogueLine,
+  RhythmBattleState,
+} from '@/game-next/core/types'
 
 /**
- * Estado del NUEVO juego (stub).
+ * Estado lógico del juego ACAY.
  *
- * Cuando llegue el brief, aquí se agregan los campos del estado lógico:
- *   - progreso narrativo (qué se ha visto, qué diálogos están disponibles)
- *   - inventario / items
- *   - estado del mini-juego guitar-hero (tabs activos, score, vidas)
- *   - posición del personaje en la escena de exploración
- *   - flags de eventos
+ * Independiente de la representación visual. La UI y el renderer lo LEEN;
+ * la lógica del juego (pantallas, handlers) lo ESCRIBE.
  *
- * Por ahora, un stub vacío que solo cumple el contrato (version + reset).
+ * Campos:
+ *   - inventory: objetos recogidos (drag-combine en el futuro).
+ *   - flags: eventos narrativos (qué se ha visto, qué diálogos están activos).
+ *   - currentDialogue: diálogo activo (null si no hay).
+ *   - dialogueIndex: línea actual del diálogo.
+ *   - battle: estado de batalla rítmica (null si no hay).
  */
-export class NewGameState extends GameState {
-  // TODO(brief): agregar campos del estado del nuevo juego.
+export class AcayGameState extends GameState {
+  /** Inventario del jugador (mockup: 2 items iniciales para demo). */
+  inventory: InventoryItem[] = [
+    { id: 'guitar', label: 'Guitarra', icon: 'ui.item_guitar', description: 'Una guitarra vieja encontrada en la ribera.' },
+    { id: 'relic', label: 'Reliquia', icon: 'ui.item_relic', description: 'Una reliquia tallada en piedra.' },
+  ]
 
+  /** Flags narrativos (eventos vistos, acertijos resueltos, etc.). */
+  flags: Record<string, boolean> = {}
+
+  /** Diálogo activo (array de líneas) o null. */
+  currentDialogue: DialogueLine[] | null = null
+  /** Índice de la línea actual del diálogo. */
+  dialogueIndex = 0
+
+  /** Estado de batalla rítmica en curso (null si no hay). */
+  battle: RhythmBattleState | null = null
+
+  /** ID del elemento bajo hover del puntero (null si ninguno). */
+  hoveredElementId: string | null = null
+
+  /** Reinicio completo (nueva partida). */
   reset(): void {
-    // TODO(brief): resetear campos del nuevo juego.
+    this.inventory = [
+      { id: 'guitar', label: 'Guitarra', icon: 'ui.item_guitar', description: 'Una guitarra vieja encontrada en la ribera.' },
+      { id: 'relic', label: 'Reliquia', icon: 'ui.item_relic', description: 'Una reliquia tallada en piedra.' },
+    ]
     this.flags = {}
+    this.currentDialogue = null
+    this.dialogueIndex = 0
+    this.battle = null
+    this.hoveredElementId = null
     this.markChanged()
   }
 }

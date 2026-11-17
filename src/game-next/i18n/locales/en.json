@@ -1,11 +1,58 @@
 {
   "common": {
     "loading": "Loading…",
-    "ready": "READY FOR NEW GAME"
+    "start": "Begin adventure",
+    "devNote": "Demo — mockup art"
   },
-  "placeholder": {
-    "title": "NEW GAME — STUB",
-    "subtitle": "Awaiting detailed brief",
-    "hint": "The engine is running. Game mechanics will be implemented here once the brief arrives."
+  "studio": {
+    "title": "WrongMeca Studios"
+  },
+  "explore": {
+    "title": "Beyond the River Calchaquí",
+    "hint": "Move the pointer. Hover over elements to inspect. Click to interact."
+  },
+  "dialogue": {
+    "acayBabble": "…",
+    "continue": "Continue",
+    "close": "Close"
+  },
+  "items": {
+    "guitar": "guitar",
+    "relic": "relic"
+  },
+  "battle": {
+    "title": "Rhythm duel",
+    "hp": "HP",
+    "dodges": "Dodges",
+    "hits": "Hits",
+    "dodge": "Dodge! (←/→)",
+    "victory": "You survived!",
+    "defeat": "You fell…",
+    "exit": "ESC to return"
+  },
+  "narrative": {
+    "rock_label": "Stone",
+    "rock_hover": "A smooth stone by the path.",
+    "rock_inspect": "A smooth stone, polished by the wind. There are carved marks you cannot decipher.",
+    "tree_label": "Dead tree",
+    "tree_hover": "A dry, leafless tree.",
+    "tree_inspect": "A dry algarrobo. Its shade shelters stones someone stacked with care.",
+    "ruin_label": "Ruin",
+    "ruin_hover": "Crumbled adobe walls.",
+    "ruin_inspect": "Adobe walls that time brought down. Someone lived here; now only dust remains.",
+    "coquena_label": "Coquena",
+    "coquena_hover": "A hunched figure by the fire.",
+    "coquena_inspect": "Coquena, the merchant and protector deity. Watches you without haste."
+  },
+  "dialogues": {
+    "coquena_greeting": {
+      "speaker_coquena": "Coquena",
+      "speaker_acay": "Acay",
+      "l1_coquena": "You came far, little one. The river is not crossed with hunger, but with wit.",
+      "l2_acay": "…",
+      "l3_coquena": "I do not understand you, but I know you. The spirit that guides you… is also familiar to me.",
+      "l4_acay": "… …",
+      "l5_coquena": "If you wish to cross, you will need more than courage. Search the riverbank."
+    }
   }
 }

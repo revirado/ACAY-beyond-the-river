@@ -21,6 +21,8 @@ export class InputManager {
   private down = new Set<string>()
   private pressed = new Set<string>()
   private clickQueue: Vec2[] = []
+  /** Última posición del puntero en coords virtuales (null si salió del canvas). */
+  private pointerPos: Vec2 | null = null
   private canvas: HTMLCanvasElement | null = null
 
   private gestureCb: (() => void) | null = null
@@ -57,7 +59,21 @@ export class InputManager {
   private onCanvasPointerDown = (e: PointerEvent): void => {
     this.fireGesture()
     const pos = this.toVirtual(e.clientX, e.clientY)
-    if (pos) this.clickQueue.push(pos)
+    if (pos) {
+      this.clickQueue.push(pos)
+      this.pointerPos = pos
+    }
+  }
+
+  /** pointermove sobre el canvas: actualiza pointerPos para hover. */
+  private onCanvasPointerMove = (e: PointerEvent): void => {
+    const pos = this.toVirtual(e.clientX, e.clientY)
+    if (pos) this.pointerPos = pos
+  }
+
+  /** pointerleave: el puntero salió del canvas → pointerPos null. */
+  private onCanvasPointerLeave = (): void => {
+    this.pointerPos = null
   }
 
   // Listeners de "primer gesto" en window: capturan también los botones React.
@@ -79,6 +95,8 @@ export class InputManager {
     window.addEventListener('blur', this.onBlur)
     document.addEventListener('visibilitychange', this.onVisibilityChange)
     canvas.addEventListener('pointerdown', this.onCanvasPointerDown)
+    canvas.addEventListener('pointermove', this.onCanvasPointerMove)
+    canvas.addEventListener('pointerleave', this.onCanvasPointerLeave)
   }
 
   detach(): void {
@@ -86,12 +104,17 @@ export class InputManager {
     window.removeEventListener('keyup', this.onKeyUp)
     window.removeEventListener('blur', this.onBlur)
     document.removeEventListener('visibilitychange', this.onVisibilityChange)
-    if (this.canvas) this.canvas.removeEventListener('pointerdown', this.onCanvasPointerDown)
+    if (this.canvas) {
+      this.canvas.removeEventListener('pointerdown', this.onCanvasPointerDown)
+      this.canvas.removeEventListener('pointermove', this.onCanvasPointerMove)
+      this.canvas.removeEventListener('pointerleave', this.onCanvasPointerLeave)
+    }
     this.removeGestureListeners()
     this.canvas = null
     this.down.clear()
     this.pressed.clear()
     this.clickQueue.length = 0
+    this.pointerPos = null
   }
 
   // ── Consultas ──
@@ -109,6 +132,15 @@ export class InputManager {
   /** Devuelve y consume el próximo click pendiente en coords virtuales (o null). */
   consumeClick(): Vec2 | null {
     return this.clickQueue.shift() ?? null
+  }
+
+  /**
+   * Última posición del puntero en coords virtuales (o null si está fuera del
+   * canvas). Para detección de hover en pantallas POV / point-and-click.
+   * NO se consume: persiste hasta que el puntero se mueve o sale del canvas.
+   */
+  getPointerPos(): Vec2 | null {
+    return this.pointerPos
   }
 
   // ── Primer gesto (desbloqueo de audio) ──

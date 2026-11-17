@@ -1,19 +1,23 @@
 import { createGameStore } from '@/engine/state/store'
-import type { NewGameSnapshot } from '@/game-next/core/types'
+import type { AcaySnapshot } from '@/game-next/core/types'
 
 /**
- * Store de UI (Zustand) del nuevo juego — creado con la factory genérica
- * del motor. El motor publica snapshots aquí vía `module.store`.
+ * Store de UI (Zustand) del juego Acay.
+ * El motor publica snapshots aquí vía module.store.
  */
-const initialSnapshot: NewGameSnapshot = {
+const initialSnapshot: AcaySnapshot = {
   ready: false,
-  screen: 'placeholder',
-  locale: 'en',
+  screen: 'studio',
+  locale: 'es',
   muted: false,
   volume: 0.5,
   debug: false,
   toasts: [],
   urls: {},
+  dialogue: null,
+  inventory: [],
+  battle: null,
+  hoveredElementId: null,
 }
 
-export const useGameStore = createGameStore<NewGameSnapshot>(initialSnapshot)
+export const useGameStore = createGameStore<AcaySnapshot>(initialSnapshot)
