@@ -5,6 +5,7 @@ import type { GameScreen } from '@/engine/core/ScreenManager'
 import type { AcayGameState } from '@/game-next/state/gameState'
 import type { RhythmTab, RhythmBattleState } from '@/game-next/core/types'
 import { CONFIG, PALETTE } from '@/game-next/core/config'
+import { CONTROLS, wasAnyPressed } from '@/game-next/core/controls'
 import { ANTAGONISTS } from '@/game-next/data/scene'
 import { PerspectiveTrack } from '@/engine/rhythm/PerspectiveTrack'
 import { t } from '@/engine/i18n'
@@ -104,8 +105,8 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
     const elapsed = (performance.now() - battle.startMs) / 1000
 
     // ── Movimiento de Acay (cambio de lane instantáneo) ──
-    const left = ctx.input.wasPressed('ArrowLeft') || ctx.input.wasPressed('KeyA')
-    const right = ctx.input.wasPressed('ArrowRight') || ctx.input.wasPressed('KeyD')
+    const left = wasAnyPressed(ctx.input, CONTROLS.dodgeLeft)
+    const right = wasAnyPressed(ctx.input, CONTROLS.dodgeRight)
     if (left && battle.acayLane > 0) battle.acayLane--
     if (right && battle.acayLane < battle.lanes - 1) battle.acayLane++
     // Suavizado visual de la lane
@@ -152,7 +153,7 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
     }
 
     // ── ESC: cancelar ──
-    if (ctx.input.wasPressed('Escape')) {
+    if (wasAnyPressed(ctx.input, CONTROLS.cancel)) {
       this.finished = true
       ctx.screens.requestSwitch('explore', undefined, CONFIG.fade.fast)
       return

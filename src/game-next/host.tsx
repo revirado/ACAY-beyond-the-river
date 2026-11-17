@@ -9,7 +9,7 @@ import { useGameStore } from '@/game-next/state/store'
 import { t } from '@/engine/i18n'
 import { acayModule } from '@/game-next/core/module'
 import { DialogueBox } from '@/game-next/components/DialogueBox'
-import { InventoryBox } from '@/game-next/components/InventoryBox'
+import { Inventory } from '@/game-next/components/Inventory'
 import { CustomCursor } from '@/game-next/components/CustomCursor'
 import { LanguageSwitch } from '@/game-next/components/LanguageSwitch'
 
@@ -109,7 +109,7 @@ export function AcayHost({ devMode = false }: { devMode?: boolean }) {
         {ready && screen === 'explore' && (
           <>
             {hasDialogue && <DialogueBox />}
-            <InventoryBox />
+            <Inventory />
             <LanguageSwitch />
           </>
         )}

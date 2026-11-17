@@ -56,20 +56,42 @@
     "relic_inspect": "Una reliquia de piedra con un símbolo que no reconoces. Irradia calor.",
     "relic_inspect_have": "Ya tienes la reliquia. Coquena podría interesarse.",
     "relic_desc": "Una reliquia tallada en piedra.",
-    "relic_pickup": "Recogiste una reliquia tallada. Pulsa cálida."
+    "relic_pickup": "Recogiste una reliquia tallada. Pulsa cálida.",
+    "ucumar_label": "Ucumar",
+    "ucumar_hover": "Una figura oscura y peluda bloquea el paso.",
+    "ucumar_inspect": "El Ucumar. Protege este camino. La magia de la Pacha te ampara… por ahora.",
+    "pacha_label": "La Pacha"
   },
   "dialogues": {
     "coquena_greeting": {
       "speaker_coquena": "Coquena",
       "speaker_acay": "Acay",
       "l1_coquena": "Llegaste lejos, pequeño. El río no se cruza con hambre, sino con ingenio.",
-      "l2_acay": "…",
+      "l2_acay": "Vine… desde el otro lado del río. Mi pueblo se muere de hambre.",
       "l3_coquena": "No te entiendo, pero te conozco. El espíritu que te guía… también me es familiar.",
-      "l4_acay": "… …",
+      "l4_acay": "¿Cómo cruzo? El río está crecido…",
       "l5_coquena": "Si quieres cruzar, necesitarás más que valor. Busca en la ribera."
+    },
+    "pacha_greeting": {
+      "speaker_pacha": "La Pacha",
+      "l1": "No temas, pequeño. La tierra te escucha, aunque no la veas.",
+      "l2": "Cruzas el río buscando riquezas… pero lo que necesitas está aquí, en la ribera.",
+      "l3": "Recoge lo que el agua dejó. Cada piedra cuenta una historia.",
+      "l4": "Cuando tengas lo suficiente, vuelve a mí. Yo te guiaré."
+    },
+    "pacha_relics": {
+      "speaker_pacha": "La Pacha",
+      "l1": "Veo que encontraste reliquias. Las piedras antiguas guardan memoria.",
+      "l2": "El Ucumar bloquea el paso… pero tu corazón es valiente. Acércate cuando estés listo.",
+      "l3": "Recuerda: no debes golpear, debes esquivar. La fuerza no es tu camino."
     }
   },
   "inventory": {
     "title": "Inventario"
+  },
+  "ui": {
+    "inventory_button": "Inventario",
+    "inventory_empty": "Vacío",
+    "inventory_close": "Cerrar"
   }
 }

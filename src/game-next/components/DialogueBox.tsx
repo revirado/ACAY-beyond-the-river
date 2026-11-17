@@ -11,7 +11,9 @@ import { t } from '@/engine/i18n'
  *
  * - Efecto typewriting automático: los caracteres aparecen a CONFIG.explore.typewriterCps.
  * - Se expande verticalmente con el contenido.
- * - Si la línea es de Acay (isAcay): estilo balbuceo (itálica, mutado).
+ * - El texto de Acay es LEGIBLE (el jugador lee lo que Acay dice). El
+ *   "balbuceo" es un ASSET DE SONIDO que suena al hablar Acay (hook futuro:
+ *   reproducir audio.babble cuando isAcay=true). Los NPC sí entienden a Acay.
  * - Hint "▼" cuando el typewriting terminó y hay más líneas.
  * - Click en el canvas (handleado por ExploreScreen) avanza la línea.
  */
@@ -77,14 +79,12 @@ export function DialogueBox() {
           style={{ color: PALETTE.pergaminoBorde }}
         >
           {speaker}
-          {isAcay && <span className="ml-2 text-xs font-normal opacity-60">(balbucea)</span>}
         </div>
-        {/* Texto */}
+        {/* Texto — legible siempre (Acay incluido; el balbuceo es sonido, no texto) */}
         <p
           className="font-serif leading-snug"
           style={{
-            color: isAcay ? PALETTE.tintaClara : PALETTE.tinta,
-            fontStyle: isAcay ? 'italic' : 'normal',
+            color: PALETTE.tinta,
             fontSize: 17,
             minHeight: 22,
           }}

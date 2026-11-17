@@ -18,7 +18,7 @@ datos ni API routes funcionales para el gameplay.
 El motor está separado físicamente de cualquier juego concreto:
 - **`src/engine/`** — el motor (genérico, independiente de mecánicas).
 - **`src/game/`** — juego cozy de referencia (demuestra que el motor funciona).
-- **`src/game-next/`** — stub del nuevo juego (recibirá el brief detallado).
+- **`src/game-next/`** — ACAY / Beyond the River (juego activo: aventura POV + duelos rítmicos).
 
 **Agregar un juego nuevo = implementar un `GameModule` y montarlo.** No se
 modifica el motor. Ver §5.
@@ -107,6 +107,10 @@ src/
     i18n/index.ts          # ⭐ i18n registry-based: registerLocale/registerLocales, setLocale,
                            #   getLocale, isLocale, getLocales, t, tOr. El motor NO incluye locales;
                            #   cada juego los registra vía GameModule.locales.
+    rhythm/
+      PerspectiveTrack.ts  # ⭐ Sistema de pista rítmica en perspectiva: TrackGeometry + tabProgress
+                           #   (curva p^curveExp: lento lejos, rápido cerca) + tabScreenPos. Reutilizable
+                           #   para cualquier juego de ritmo tipo guitar-hero.
 
   game/                    ← ═════════════ JUEGO COZY (referencia) ════
     core/
@@ -145,16 +149,60 @@ src/
       locales/en.json es.json
     components/AssetImg.tsx (movido a src/components/game/AssetImg.tsx)
 
-  game-next/               ← ═════════════ NUEVO JUEGO (stub — recibir brief) ════
+  game-next/               ← ═════════════ ACAY / BEYOND THE RIVER (juego activo) ════
     core/
-      types.ts             # ScreenId stub ('placeholder'), NewGameSnapshot (solo base).
-      module.ts            # ⭐ newGameModule: GameModule<NewGameState, NewGameSnapshot>. Stub mínimo.
-    state/gameState.ts     # NewGameState extends GameState (vacío, listo para el brief).
-    state/store.ts         # useGameStore = createGameStore<NewGameSnapshot>(initial).
-    data/assetIndex.ts     # Índice stub (1 placeholder).
-    i18n/locales/en.json es.json  # Textos stub.
-    screens/PlaceholderScreen.ts  # Pantalla "READY FOR NEW GAME".
-    host.tsx               # NewGameHost: React host que monta el motor con newGameModule.
+      types.ts             # ScreenId (studio/title/explore/rhythm-battle), NarrativeElement
+                           #   (con pickup + triggersBattle), DialogueLine (isAcay para hook de
+                           #   sonido babble — texto legible), RhythmTab, RhythmBattleState,
+                           #   AcaySnapshot (dialogue/inventory/battle/hoveredElementId).
+      config.ts            # Re-exporta config motor + PALETTE andina (terracota/ocre/marrón,
+                           #   sin azul) + CONFIG: studio, title (secuencia de fades), explore
+                           #   (cursor, hover, typewriter), rhythm (lanes, track geom, curveExp).
+      controls.ts          # ⭐ CONTROLS centralizados: skip/interact/cancel/dodgeLeft/dodgeRight/
+                           #   inventory/mute/debug. Helpers wasAnyPressed/isAnyDown. Reutilizable.
+      triggers.ts          # ⭐ Sistema de triggers de diálogo auto-iniciados: onSceneEnter,
+                           #   onInventoryCount, onFlag. evaluateTriggers() + buildDialogueTriggers().
+                           #   La Pacha (invisible) se manifiesta via triggers. Reutilizable.
+      module.ts            # ⭐ acayModule: GameModule<AcayGameState, AcaySnapshot>. Registra 4
+                           #   pantallas, locales es/en, drawers, audioTracks (mockup), buildSnapshot.
+      engineBridge.ts      # (usa el del motor directamente).
+    state/
+      gameState.ts         # AcayGameState: inventory (vacío inicial), currentDialogue, dialoguePhase,
+                           #   battle, hoveredElementId, flags. addItem()/hasItem().
+      store.ts             # useGameStore = createGameStore<AcaySnapshot>(initial).
+    data/
+      assetIndex.ts        # ⭐ Índice: ui.studio_logo (file real), ui.title_logo (procedural),
+                           #   acay.back, ant.*, scene.*, narrative.* (rock/tree/ruin/coquena/
+                           #   guitar/relic), ui.item_* (placeholders). TODO mockup → arte real.
+      scene.ts             # buildSceneElements() (lazy, para que t() resuelva), ANTAGONISTS.
+                           #   Elementos: rock, tree, ruin, coquena (diálogo), ucumar (battle),
+                           #   guitar_find + relic_find (pickups).
+    assets/drawers.ts      # Drawers procedurales mockup: acay_back, antagonist_ucumar/shadow,
+                           #   explore_background (ribera), rhythm_track (perspectiva), narrative_*,
+                           #   title_logo (ACAY + Beyond the river), narrative_guitar/relic.
+    i18n/
+      index.ts             # Re-exporta motor i18n.
+      locales/es.json en.json  # Textos centralizados (common, studio, explore, dialogue, items,
+                               #   battle, narrative, dialogues, ui). TODO: faltan textos de UI
+                               #   genéricos (pause menu, etc.).
+    screens/
+      StudioScreen.ts      # Intro del estudio (logo wrongmeca.png, fade in/hold/out) → title.
+      TitleScreen.ts       # Pantalla de título: bg negro + asset título. Secuencia de fades:
+                           #   fadeIn (bg+title) → hold → bgFadeOut (bg primero) → titleFadeOut
+                           #   (title después) → 1s delay → explore. Saltable.
+      ExploreScreen.ts     # POV point-and-click: puntero customizado, hover elementos, click →
+                           #   pickup/inspect/dialogue/battle. Triggers auto-iniciados (La Pacha).
+      RhythmBattleScreen.ts # Guitar-hero invertido: Acay de espaldas (frente), tabs en perspectiva
+                            #   (medio via PerspectiveTrack), antagonista (fondo). Esquiva izq/der.
+    audio/                 # (vacío — sin pistas todavía; mockup silencio).
+    components/
+      AssetImg.tsx         # <img> por assetId (URLs del store).
+      DialogueBox.tsx      # Caja diálogo (inf-izq, typewriting, expande vertical). Acay legible.
+      Inventory.tsx        # Botón toggle (badge count) + modal centrado (no cubre items).
+                           #   Tecla I/Tab toggle, ESC cierra.
+      CustomCursor.tsx     # Puntero customizado React (z-50, sobre todo). Anillo/filled.
+      LanguageSwitch.tsx   # Toggle ES/EN (sup-der), llama engine.setLocale.
+    host.tsx               # AcayHost: monta motor con acayModule + compone overlays por pantalla.
 
   components/
     ui/                    # shadcn/ui (librería, no tocar para features).

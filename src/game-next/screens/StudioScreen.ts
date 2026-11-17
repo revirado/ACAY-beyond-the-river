@@ -4,6 +4,7 @@ import type { Renderer } from '@/engine/render/Renderer'
 import type { GameScreen } from '@/engine/core/ScreenManager'
 import type { AcayGameState } from '@/game-next/state/gameState'
 import { CONFIG } from '@/game-next/core/config'
+import { CONTROLS, wasAnyPressed } from '@/game-next/core/controls'
 
 /**
  * StudioScreen — intro del estudio (logo WrongMeca, solo 1ra carga).
@@ -48,14 +49,8 @@ export class StudioScreen implements GameScreen<'studio', AcayGameState> {
       this.done = true
     }
 
-    // Saltar: Enter/Space/ESC/clic
-    if (
-      ctx.input.wasPressed('Enter') ||
-      ctx.input.wasPressed('Space') ||
-      ctx.input.wasPressed('Escape') ||
-      ctx.input.wasPressed('NumpadEnter') ||
-      ctx.input.consumeClick()
-    ) {
+    // Saltar: skip (Enter/Space/ESC) o clic
+    if (wasAnyPressed(ctx.input, CONTROLS.skip) || ctx.input.consumeClick()) {
       this.done = true
     }
 

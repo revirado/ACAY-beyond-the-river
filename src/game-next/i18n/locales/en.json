@@ -56,20 +56,42 @@
     "relic_inspect": "A stone relic with a symbol you do not recognize. It radiates warmth.",
     "relic_inspect_have": "You already have the relic. Coquena might be interested.",
     "relic_desc": "A relic carved in stone.",
-    "relic_pickup": "You picked up a carved relic. Warm to the touch."
+    "relic_pickup": "You picked up a carved relic. Warm to the touch.",
+    "ucumar_label": "Ucumar",
+    "ucumar_hover": "A dark, hairy figure blocks the path.",
+    "ucumar_inspect": "The Ucumar. It guards this path. The magic of the Pacha protects you… for now.",
+    "pacha_label": "The Pacha"
   },
   "dialogues": {
     "coquena_greeting": {
       "speaker_coquena": "Coquena",
       "speaker_acay": "Acay",
       "l1_coquena": "You came far, little one. The river is not crossed with hunger, but with wit.",
-      "l2_acay": "…",
+      "l2_acay": "I came… from the other side of the river. My village is starving.",
       "l3_coquena": "I do not understand you, but I know you. The spirit that guides you… is also familiar to me.",
-      "l4_acay": "… …",
+      "l4_acay": "How do I cross? The river is swollen…",
       "l5_coquena": "If you wish to cross, you will need more than courage. Search the riverbank."
+    },
+    "pacha_greeting": {
+      "speaker_pacha": "The Pacha",
+      "l1": "Fear not, little one. The land hears you, though you cannot see it.",
+      "l2": "You cross the river seeking riches… but what you need is here, on the bank.",
+      "l3": "Gather what the water left behind. Each stone tells a story.",
+      "l4": "When you have enough, return to me. I will guide you."
+    },
+    "pacha_relics": {
+      "speaker_pacha": "The Pacha",
+      "l1": "I see you found relics. Ancient stones hold memory.",
+      "l2": "The Ucumar blocks the path… but your heart is brave. Approach when you are ready.",
+      "l3": "Remember: you must not strike, you must dodge. Force is not your path."
     }
   },
   "inventory": {
     "title": "Inventory"
+  },
+  "ui": {
+    "inventory_button": "Inventory",
+    "inventory_empty": "Empty",
+    "inventory_close": "Close"
   }
 }

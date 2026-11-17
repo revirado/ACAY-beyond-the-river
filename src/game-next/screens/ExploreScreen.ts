@@ -5,7 +5,9 @@ import type { GameScreen } from '@/engine/core/ScreenManager'
 import type { AcayGameState } from '@/game-next/state/gameState'
 import type { NarrativeElement, DialogueLine } from '@/game-next/core/types'
 import { CONFIG, PALETTE } from '@/game-next/core/config'
+import { CONTROLS, wasAnyPressed } from '@/game-next/core/controls'
 import { buildSceneElements, ANTAGONISTS } from '@/game-next/data/scene'
+import { buildDialogueTriggers, evaluateTriggers, newTriggerEvalState, type DialogueTrigger, type TriggerEvalState } from '@/game-next/core/triggers'
 import { t } from '@/engine/i18n'
 
 /**
@@ -25,12 +27,17 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
   readonly id = 'explore' as const
 
   private elements: NarrativeElement[] = []
+  private triggers: DialogueTrigger[] = []
   private prevHoveredId: string | null = null
+  /** Estado de evaluación de triggers de diálogo (timers por trigger). */
+  private triggerEval: TriggerEvalState = newTriggerEvalState()
 
   enter(ctx: ScreenContext<AcayGameState>): void {
     this.elements = buildSceneElements()
+    this.triggers = buildDialogueTriggers()
     ctx.state.hoveredElementId = null
     this.prevHoveredId = null
+    this.triggerEval = newTriggerEvalState()
     ctx.syncUI()
   }
 
@@ -43,6 +50,23 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
     void dt
     const st = ctx.state
     const input = ctx.input
+
+    // ── Triggers de diálogo auto-iniciados (La Pacha, etc.) ──
+    const trigger = evaluateTriggers(this.triggers, this.triggerEval, {
+      currentSceneId: this.id,
+      inventoryCount: st.inventory.length,
+      flags: st.flags,
+      hasActiveDialogue: !!st.currentDialogue,
+      now: performance.now(),
+    })
+    if (trigger) {
+      st.currentDialogue = trigger.dialogue
+      st.dialogueIndex = 0
+      st.dialoguePhase = trigger.phase
+      if (trigger.once) st.flags[`trigger:${trigger.id}`] = true
+      ctx.syncUI()
+      return // el diálogo arranca; no procesar hover/clic este frame
+    }
 
     // ── Hover detection: elemento bajo el puntero ──
     const ptr = input.getPointerPos()
@@ -129,8 +153,8 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
       }
     }
 
-    // ── ESC: cierra diálogo ──
-    if (input.wasPressed('Escape') && st.currentDialogue) {
+    // ── Cancel (ESC): cierra diálogo ──
+    if (wasAnyPressed(input, CONTROLS.cancel) && st.currentDialogue) {
       st.currentDialogue = null
       st.dialogueIndex = 0
       st.dialoguePhase = 'idle'

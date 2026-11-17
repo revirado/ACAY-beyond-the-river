@@ -4,6 +4,7 @@ import type { Renderer } from '@/engine/render/Renderer'
 import type { GameScreen } from '@/engine/core/ScreenManager'
 import type { AcayGameState } from '@/game-next/state/gameState'
 import { CONFIG } from '@/game-next/core/config'
+import { CONTROLS, wasAnyPressed } from '@/game-next/core/controls'
 
 type TitlePhase = 'fadeIn' | 'hold' | 'bgFadeOut' | 'titleFadeOut' | 'delay' | 'done'
 
@@ -107,14 +108,8 @@ export class TitleScreen implements GameScreen<'title', AcayGameState> {
       }
     }
 
-    // Saltar: Enter/Space/ESC/clic → directo a explore.
-    if (
-      ctx.input.wasPressed('Enter') ||
-      ctx.input.wasPressed('Space') ||
-      ctx.input.wasPressed('Escape') ||
-      ctx.input.wasPressed('NumpadEnter') ||
-      ctx.input.consumeClick()
-    ) {
+    // Saltar: skip (Enter/Space/ESC) o clic → directo a explore.
+    if (wasAnyPressed(ctx.input, CONTROLS.skip) || ctx.input.consumeClick()) {
       this.phase = 'done'
     }
 
