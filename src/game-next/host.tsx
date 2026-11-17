@@ -7,26 +7,32 @@ import { GameEngine } from '@/engine/core/GameEngine'
 import { setEngineInstance as setEngineInstanceBase } from '@/engine/core/engineBridge'
 import { useGameStore } from '@/game-next/state/store'
 import { t } from '@/engine/i18n'
-import { newGameModule } from '@/game-next/core/module'
+import { acayModule } from '@/game-next/core/module'
+import { DialogueBox } from '@/game-next/components/DialogueBox'
+import { InventoryBox } from '@/game-next/components/InventoryBox'
 
 /**
- * Host del NUEVO juego (stub) — monta el motor con `newGameModule` sobre el
- * canvas y compone los overlays React. Estructura equivalente al GameRoot
- * del juego cozy, pero con el módulo y overlays del nuevo juego.
+ * AcayHost — monta el motor con `acayModule` sobre el canvas y compone los
+ * overlays React según la pantalla activa.
  *
- * Cuando llegue el brief, los overlays reales (caja de diálogo, inventario,
- * HUD de guitar-hero, etc.) se componen aquí.
+ * Overlays:
+ *   - Loading (mientras !ready).
+ *   - DialogueBox (inferior izquierda) — visible si hay diálogo activo.
+ *   - InventoryBox (inferior derecha) — visible en explore y rhythm-battle.
+ *   - devMode badge (esquina sup-izq) si devMode=true.
  */
-export function NewGameHost({ devMode = false }: { devMode?: boolean }) {
+export function AcayHost({ devMode = false }: { devMode?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [fit, setFit] = useState({ w: VIRTUAL_WIDTH, h: VIRTUAL_HEIGHT })
   const ready = useGameStore((s) => s.ready)
+  const screen = useGameStore((s) => s.screen)
+  const hasDialogue = useGameStore((s) => s.dialogue !== null)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     let cancelled = false
-    const engine = new GameEngine(canvas, newGameModule)
+    const engine = new GameEngine(canvas, acayModule)
     setEngineInstanceBase(engine)
     if (process.env.NODE_ENV !== 'production') {
       ;(window as unknown as { __game?: GameEngine }).__game = engine
@@ -40,7 +46,7 @@ export function NewGameHost({ devMode = false }: { devMode?: boolean }) {
         if (!cancelled) engine.start()
       })
       .catch((err) => {
-        console.error('[new-game] Error cargando assets:', err)
+        console.error('[acay] Error cargando assets:', err)
         if (!cancelled) engine.start()
       })
 
@@ -68,35 +74,53 @@ export function NewGameHost({ devMode = false }: { devMode?: boolean }) {
     }
   }, [recompute])
 
+  // El cursor nativo se oculta en explore/rhythm-battle (puntero customizado en canvas).
+  const hideNativeCursor = ready && (screen === 'explore' || screen === 'rhythm-battle')
+
   return (
     <main
-      aria-label="New game (stub)"
+      aria-label="Acay — Beyond the River"
       className="flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#0a0a0a] p-4"
     >
       <div
-        className="relative overflow-hidden rounded-xl shadow-2xl shadow-black/60 ring-1 ring-slate-100/10"
+        className="relative overflow-hidden rounded-xl shadow-2xl shadow-black/60 ring-1 ring-amber-100/10"
         style={{ width: fit.w, height: fit.h, aspectRatio: String(VIRTUAL_ASPECT) }}
       >
         <canvas
           ref={canvasRef}
           width={VIRTUAL_WIDTH}
           height={VIRTUAL_HEIGHT}
-          aria-label="Motor del juego (stub)"
-          className="block h-full w-full select-none bg-[#1a1a1a]"
+          aria-label="Mundo de Acay"
+          className="block h-full w-full select-none bg-[#2a1a10]"
+          style={{ cursor: hideNativeCursor ? 'none' : 'default' }}
         />
 
+        {/* Loading */}
         {!ready && (
-          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-[#0a0a0a] text-slate-100">
+          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 bg-[#0a0a0a] text-amber-100">
             <Loader2 className="h-8 w-8 animate-spin text-amber-300" aria-hidden />
             <p className="text-sm tracking-wide">{t('common.loading')}</p>
           </div>
         )}
 
-        {/* TODO(brief): overlays del nuevo juego (caja de diálogo, inventario,
-            HUD de guitar-hero, puntero customizado, etc.). */}
+        {/* Overlays según pantalla */}
+        {ready && screen === 'explore' && (
+          <>
+            {hasDialogue && <DialogueBox />}
+            <InventoryBox />
+          </>
+        )}
+        {ready && screen === 'rhythm-battle' && (
+          <>
+            {/* El HUD de batalla se dibuja en canvas (RhythmBattleScreen.drawHud). */}
+            {/* InventoryBox oculto en batalla (no es relevante). */}
+          </>
+        )}
+
+        {/* devMode badge */}
         {ready && devMode && (
-          <div className="absolute left-3 top-3 z-30 rounded-md bg-black/40 px-2 py-1 text-[11px] text-slate-300">
-            new-game stub · devMode
+          <div className="absolute left-3 top-3 z-30 rounded-md bg-black/40 px-2 py-1 text-[11px] text-amber-200">
+            acay · {screen} · devMode
           </div>
         )}
       </div>

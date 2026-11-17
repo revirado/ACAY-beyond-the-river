@@ -11,8 +11,8 @@
  */
 
 import { GameRoot as CozyGameRoot } from '@/components/game/GameRoot'
-import { NewGameHost } from '@/game-next/host'
+import { AcayHost } from '@/game-next/host'
 
 /** Host activo: el componente React que monta page.tsx. */
 // export const ActiveGameHost = CozyGameRoot
-export const ActiveGameHost = NewGameHost  // ← descomentar para arrancar el nuevo juego
+export const ActiveGameHost = AcayHost  // ← descomentar para arrancar el nuevo juego

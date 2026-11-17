@@ -3,107 +3,147 @@ import type { GameScreen } from '@/engine/core/ScreenManager'
 import type { ScreenContext } from '@/engine/core/context'
 import type { LocaleEntry } from '@/engine/i18n'
 import type { TrackDef } from '@/engine/core/types'
-import type { NewGameSnapshot, ScreenId, MusicTrackId } from '@/game-next/core/types'
-import type { NewGameState } from '@/game-next/state/gameState'
+import type { AcaySnapshot, ScreenId, MusicTrackId } from '@/game-next/core/types'
+import type { AcayGameState } from '@/game-next/state/gameState'
 
 import { ASSET_INDEX, UI_ASSET_URLS } from '@/game-next/data/assetIndex'
+import { DRAWERS } from '@/game-next/assets/drawers'
 import { useGameStore } from '@/game-next/state/store'
-import { NewGameState as NewState } from '@/game-next/state/gameState'
+import { AcayGameState as AcayState } from '@/game-next/state/gameState'
+import { CONFIG } from '@/game-next/core/config'
 import { getLocale } from '@/engine/i18n'
 
-import { PlaceholderScreen } from '@/game-next/screens/PlaceholderScreen'
+import { StudioScreen } from '@/game-next/screens/StudioScreen'
+import { ExploreScreen } from '@/game-next/screens/ExploreScreen'
+import { RhythmBattleScreen } from '@/game-next/screens/RhythmBattleScreen'
 
-// Locales del nuevo juego (importados estáticamente).
+// Locales del juego Acay.
 import en from '@/game-next/i18n/locales/en.json'
 import es from '@/game-next/i18n/locales/es.json'
 
-const NEW_GAME_LOCALES: LocaleEntry[] = [
-  { id: 'en', label: 'English', dict: en },
+const ACAY_LOCALES: LocaleEntry[] = [
   { id: 'es', label: 'Español', dict: es },
+  { id: 'en', label: 'English', dict: en },
 ]
 
-/**
- * Música por pantalla del nuevo juego (stub — sin pistas todavía).
- * Cuando llegue el brief, definir las pistas rítmicas para guitar-hero
- * y música ambiente para exploración.
- */
+/** Música por pantalla (mockup: sin pistas todavía → silencio). */
 const MUSIC_BY_SCREEN: Record<ScreenId, MusicTrackId | undefined> = {
-  placeholder: undefined, // silencio por ahora
+  studio: 'explore',
+  explore: 'explore',
+  'rhythm-battle': 'battle',
 }
 
-/** Pistas procedurales del nuevo juego (stub — vacío). */
+/** Pistas procedurales mockup (vacío por ahora — el motor no reproduce nada). */
 const AUDIO_TRACKS: Record<string, TrackDef> = {
-  // TODO(brief): definir pistas rítmicas para guitar-hero.
+  // TODO: definir pistas procedurales cuando se decida el estilo musical.
 }
 
 /**
- * Helper: construye el snapshot del nuevo juego desde el estado + servicios.
- * Stub: solo los campos base. Cuando llegue el brief, extender con los
- * campos del nuevo juego (diálogo, inventario, estado guitar-hero, etc.).
+ * Helper: construye el snapshot Acay desde el estado + servicios del motor.
+ * Los campos `urls`, `toasts` e `interaction` los rellena el motor después.
  */
-function buildSnapshot(ctx: GameSnapshotContext<NewState>): NewGameSnapshot {
+function buildAcaySnapshot(ctx: GameSnapshotContext<AcayState>): AcaySnapshot {
+  const st = ctx.state
+  const sid = ctx.screens.currentId ?? 'studio'
+
+  // Diálogo actual (si hay)
+  let dialogue: AcaySnapshot['dialogue'] = null
+  if (st.currentDialogue && st.dialogueIndex < st.currentDialogue.length) {
+    const line = st.currentDialogue[st.dialogueIndex]
+    dialogue = {
+      phase: st.dialoguePhase,
+      speaker: line.speaker,
+      fullText: line.text,
+      isAcay: line.isAcay ?? false,
+      lineIndex: st.dialogueIndex,
+      lineCount: st.currentDialogue.length,
+    }
+  }
+
+  // Batalla (si hay)
+  let battle: AcaySnapshot['battle'] = null
+  if (st.battle) {
+    const b = st.battle
+    const elapsed = (performance.now() - b.startMs) / 1000
+    battle = {
+      antagonistName: b.antagonistName,
+      hp: b.hp,
+      maxHp: CONFIG.rhythm.maxHp,
+      dodges: b.dodges,
+      hits: b.hits,
+      lanes: b.lanes,
+      acayLane: b.acayLane,
+      elapsedSec: elapsed,
+      durationSec: b.durationSec,
+    }
+  }
+
   return {
     ready: true,
-    screen: (ctx.screens.currentId ?? 'placeholder') as ScreenId,
-    locale: getLocale(),
+    screen: sid as ScreenId,
+    locale: getLocale() as 'es' | 'en',
     muted: ctx.audio.isMuted,
     volume: ctx.audio.getVolume(),
     debug: ctx.debug,
     toasts: [],
     urls: {},
-    interaction: null,
+    dialogue,
+    inventory: st.inventory,
+    battle,
+    hoveredElementId: st.hoveredElementId,
   }
 }
 
 /**
- * Módulo del NUEVO juego (stub).
+ * Módulo del juego ACAY / BEYOND THE RIVER.
  *
- * Implementa GameModule del motor con un GameModule mínimo: una sola
- * pantalla placeholder, sin assets reales, sin música, sin estado complejo.
- * Demuestra que el motor puede hostear un segundo juego sin modificaciones.
- *
- * Cuando llegue el brief detallado, este módulo se completa con:
- *   - Pantallas reales (exploración/conversación, guitar-hero).
- *   - Assets del índice (escenarios, personajes, UI).
- *   - Estado del juego (progreso narrativo, inventario, mini-juego).
- *   - Música (pistas rítmicas para guitar-hero).
- *   - Acciones UI (iniciar conversación, cambiar a guitar-hero, etc.).
+ * Implementa GameModule del motor y conecta TODO lo específico del juego:
+ * assets (mockup + logo studio), drawers procedurales andinos, locales (es/en),
+ * store, estado inicial (AcayGameState), 3 pantallas (StudioScreen →
+ * ExploreScreen → RhythmBattleScreen), música por pantalla (mockup: silencio),
+ * snapshot y (por ahora) sin uiActions (las transiciones son internas a las
+ * pantallas).
  */
-export const newGameModule: GameModule<NewState, NewGameSnapshot> = {
-  id: 'new-game-stub',
+export const acayModule: GameModule<AcayState, AcaySnapshot> = {
+  id: 'acay-beyond-the-river',
 
   assetIndex: ASSET_INDEX,
-  drawers: {}, // sin drawers procedurales todavía
+  drawers: DRAWERS,
   uiAssetUrls: UI_ASSET_URLS,
 
-  locales: NEW_GAME_LOCALES,
-  defaultLocale: 'en',
+  locales: ACAY_LOCALES,
+  defaultLocale: 'es',
 
   store: useGameStore,
 
-  createInitialState(): NewState {
-    return new NewState()
+  createInitialState(): AcayState {
+    return new AcayState()
   },
 
-  createScreens(_ctx: ScreenContext<NewState>): GameScreen[] {
-    return [new PlaceholderScreen()]
+  createScreens(_ctx: ScreenContext<AcayState>): GameScreen[] {
+    return [
+      new StudioScreen(),
+      new ExploreScreen(),
+      new RhythmBattleScreen(),
+    ]
   },
 
-  initialScreen: 'placeholder',
+  initialScreen: 'studio',
 
   musicByScreen: MUSIC_BY_SCREEN as Record<string, string>,
 
   audioTracks: AUDIO_TRACKS,
 
-  buildSnapshot,
+  buildSnapshot: buildAcaySnapshot,
 
-  // onStateChanged: stub — sin progresión todavía.
+  // onStateChanged: sin progresión por ahora (stub).
 
-  initialFadeIn: 600,
+  initialFadeIn: 700,
 
-  // clockDayLengthSec: el nuevo juego no tiene ciclo día/noche (stub).
+  // clockDayLengthSec: el juego Acay no tiene ciclo día/noche (mockup).
 
   uiActions: {
-    // TODO(brief): acciones del nuevo juego (iniciar diálogo, guitar-hero, etc.).
+    // TODO: acciones del juego (iniciar diálogo desde React, etc.) cuando
+    // el inventario drag-combine o menús React lo requieran.
   },
 }

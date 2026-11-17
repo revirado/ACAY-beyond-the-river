@@ -82,6 +82,7 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
           // Última línea → cerrar
           st.currentDialogue = null
           st.dialogueIndex = 0
+          st.dialoguePhase = 'idle'
           ctx.syncUI()
         }
       } else if (hovered) {
@@ -93,6 +94,7 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
           // Inicia conversación
           st.currentDialogue = hovered.dialogue
           st.dialogueIndex = 0
+          st.dialoguePhase = 'conversation'
           ctx.syncUI()
         } else {
           // Inspección (narración de una sola línea)
@@ -100,6 +102,7 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
             { speaker: hovered.label, text: hovered.inspectText },
           ]
           st.dialogueIndex = 0
+          st.dialoguePhase = 'narration'
           ctx.syncUI()
         }
       }
@@ -109,6 +112,7 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
     if (input.wasPressed('Escape') && st.currentDialogue) {
       st.currentDialogue = null
       st.dialogueIndex = 0
+      st.dialoguePhase = 'idle'
       ctx.syncUI()
     }
   }

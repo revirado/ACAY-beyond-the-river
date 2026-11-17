@@ -3,6 +3,7 @@ import type {
   InventoryItem,
   DialogueLine,
   RhythmBattleState,
+  DialoguePhase,
 } from '@/game-next/core/types'
 
 /**
@@ -32,6 +33,8 @@ export class AcayGameState extends GameState {
   currentDialogue: DialogueLine[] | null = null
   /** Índice de la línea actual del diálogo. */
   dialogueIndex = 0
+  /** Fase del diálogo (narration = inspección; conversation = con personaje). */
+  dialoguePhase: DialoguePhase = 'idle'
 
   /** Estado de batalla rítmica en curso (null si no hay). */
   battle: RhythmBattleState | null = null
@@ -48,6 +51,7 @@ export class AcayGameState extends GameState {
     this.flags = {}
     this.currentDialogue = null
     this.dialogueIndex = 0
+    this.dialoguePhase = 'idle'
     this.battle = null
     this.hoveredElementId = null
     this.markChanged()
