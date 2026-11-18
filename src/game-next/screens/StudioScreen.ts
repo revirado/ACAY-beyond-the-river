@@ -55,7 +55,7 @@ export class StudioScreen implements GameScreen<'studio', AcayGameState> {
     }
 
     if (this.done) {
-      ctx.screens.requestSwitch('title', undefined, CONFIG.fade.normal)
+      ctx.screens.requestSwitch('explore', undefined, CONFIG.fade.normal)
     }
   }
 

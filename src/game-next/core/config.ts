@@ -22,7 +22,7 @@ import { FADE_PRESETS } from '@/engine/core/config'
  * visible). Incrementar el último dígito en cada iteración (v0.0.X). El
  * segundo dígito solo sube a v0.1.0 cuando el usuario lo indique.
  */
-export const VERSION = 'v0.0.10'
+export const VERSION = 'v0.0.16'
 
 /**
  * Paleta andina NOA (Valles Calchaquíes / Puna).
@@ -114,7 +114,7 @@ export const CONFIG = {
     /** Distancia para considerar que Acay llegó al target (px). */
     walkArriveDist: 8,
     /** Color del puntero customizado. */
-    cursorColor: PALETTE.acento,
+    cursorColor: '#ffffff',
     cursorSize: 14,
     /** Radio de detección de hover (distancia al centro del elemento). */
     hoverRadius: 120,

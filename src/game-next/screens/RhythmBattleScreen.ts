@@ -56,43 +56,87 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
   )
 
   enter(ctx: ScreenContext<AcayGameState>, params?: unknown): void {
-    const p = (params ?? {}) as { antagonistId?: string }
+    const p = (params ?? {}) as { antagonistId?: string; mode?: 'dodge' | 'tutorial'; turnBased?: boolean }
+    const mode = p.mode ?? 'dodge'
+    const turnBased = p.turnBased ?? false
     const antId = p.antagonistId ?? 'shadow'
     const ant = ANTAGONISTS[antId] ?? ANTAGONISTS.shadow
     const cfg = CONFIG.rhythm
-    // Refrescar el track con la config actual (por si cambió).
     this.track = new PerspectiveTrack(cfg.track, cfg.tabTravelSec, cfg.trackCurveExp)
     this.blinkUntilMs = 0
 
-    // Generar schedule de tabs mockup
-    const tabs: RhythmTab[] = []
-    let time = 1.2 // primer tab a 1.2s (dar tiempo a posicionarse)
-    while (time < cfg.battleDurationSec - 0.5) {
-      tabs.push({
-        lane: Math.floor(Math.random() * cfg.lanes),
-        hitTime: time,
-        ghost: Math.random() < cfg.ghostChance,
-      })
-      time += cfg.tabIntervalSec + (Math.random() - 0.5) * 0.2
-    }
-
-    ctx.state.battle = {
-      antagonistId: antId,
-      antagonistName: ant.name,
-      lanes: cfg.lanes,
-      acayLane: cfg.acayStartLane,
-      tabs,
-      startMs: performance.now(),
-      hp: cfg.maxHp,
-      dodges: 0,
-      hits: 0,
-      durationSec: cfg.battleDurationSec,
+    if (turnBased) {
+      // Batalla por turnos: player turn (tocar notas) <-> enemy turn (esquivar)
+      const turnTabsCount = 5
+      const startElapsed = 1.5
+      const tabs = this.generateTurnTabs(cfg.lanes, startElapsed, turnTabsCount, 0.8)
+      ctx.state.battle = {
+        mode: 'dodge',
+        turnBased: true,
+        turn: 'player',
+        enemyHp: 3,
+        enemyMaxHp: 3,
+        turnTabsTotal: turnTabsCount,
+        turnTabsResolved: 0,
+        antagonistId: antId,
+        antagonistName: ant.name,
+        lanes: cfg.lanes,
+        acayLane: cfg.acayStartLane,
+        tabs,
+        startMs: performance.now(),
+        hp: cfg.maxHp,
+        dodges: 0,
+        hits: 0,
+        durationSec: 120, // largo: termina por HP, no por tiempo
+      }
+    } else if (mode === 'tutorial') {
+      const tabs: RhythmTab[] = []
+      const tutorialDur = 20
+      let time = 2.0
+      while (time < tutorialDur - 0.5) {
+        tabs.push({ lane: Math.floor(Math.random() * cfg.lanes), hitTime: time })
+        time += 1.0 + (Math.random() - 0.5) * 0.2
+      }
+      ctx.state.battle = {
+        mode: 'tutorial', turnBased: false, turn: 'player', enemyHp: 0, enemyMaxHp: 0,
+        turnTabsTotal: 0, turnTabsResolved: 0,
+        antagonistId: antId, antagonistName: t('scene02.gaucho_speaker'),
+        lanes: cfg.lanes, acayLane: cfg.acayStartLane, tabs,
+        startMs: performance.now(), hp: cfg.maxHp, dodges: 0, hits: 0, durationSec: tutorialDur,
+      }
+    } else {
+      // Dodge mode clásico
+      const tabs: RhythmTab[] = []
+      let time = 1.2
+      while (time < cfg.battleDurationSec - 0.5) {
+        tabs.push({ lane: Math.floor(Math.random() * cfg.lanes), hitTime: time, ghost: Math.random() < cfg.ghostChance })
+        time += cfg.tabIntervalSec + (Math.random() - 0.5) * 0.2
+      }
+      ctx.state.battle = {
+        mode: 'dodge', turnBased: false, turn: 'enemy', enemyHp: 0, enemyMaxHp: 0,
+        turnTabsTotal: 0, turnTabsResolved: 0,
+        antagonistId: antId, antagonistName: ant.name,
+        lanes: cfg.lanes, acayLane: cfg.acayStartLane, tabs,
+        startMs: performance.now(), hp: cfg.maxHp, dodges: 0, hits: 0, durationSec: cfg.battleDurationSec,
+      }
     }
     this.prevAcayLane = cfg.acayStartLane
     this.acayLaneVisual = cfg.acayStartLane
     this.resolved = []
     this.finished = false
     ctx.syncUI()
+  }
+
+  /** Genera N tabs para un turno, empezando en startElapsed, espaciados intervalSec. */
+  private generateTurnTabs(lanes: number, startElapsed: number, count: number, intervalSec: number): RhythmTab[] {
+    const tabs: RhythmTab[] = []
+    for (let i = 0; i < count; i++) {
+      tabs.push({
+        lane: Math.floor(Math.random() * lanes),
+        hitTime: startElapsed + i * intervalSec,
+      })
+    }
+    return tabs
   }
 
   exit(ctx: ScreenContext<AcayGameState>): void {
@@ -122,19 +166,52 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
     const remaining: RhythmTab[] = []
     for (const tab of battle.tabs) {
       if (elapsed >= tab.hitTime) {
-        // Resolver
-        if (tab.ghost) {
-          // Ghost: no daña, no cuenta como dodge (solo visual)
-          this.resolved.push({ tab, result: 'dodge', resolveMs: performance.now() })
-        } else if (tab.lane === battle.acayLane) {
-          battle.hp--
-          battle.hits++
-          this.resolved.push({ tab, result: 'hit', resolveMs: performance.now() })
-          // Titileo: resetea el timer (no suma con uno previo en curso).
-          this.blinkUntilMs = performance.now() + CONFIG.rhythm.blinkDurationMs
+        if (battle.turnBased) {
+          // Turn-based: resolución depende del turno
+          if (battle.turn === 'player') {
+            // Player turn: Acay toca la nota (debe ESTAR en la lane)
+            if (tab.lane === battle.acayLane) {
+              battle.enemyHp-- // daño al Duende
+              battle.dodges++
+              this.resolved.push({ tab, result: 'dodge', resolveMs: performance.now() })
+              ctx.audio.playSfx('guitar')
+            } else {
+              battle.hits++ // nota perdida
+              this.resolved.push({ tab, result: 'hit', resolveMs: performance.now() })
+            }
+          } else {
+            // Enemy turn: Acay esquiva (debe NO estar en la lane)
+            if (tab.lane === battle.acayLane) {
+              battle.hp-- // daño a Acay
+              this.resolved.push({ tab, result: 'hit', resolveMs: performance.now() })
+              this.blinkUntilMs = performance.now() + CONFIG.rhythm.blinkDurationMs
+            } else {
+              battle.dodges++
+              this.resolved.push({ tab, result: 'dodge', resolveMs: performance.now() })
+            }
+          }
+          battle.turnTabsResolved++
+        } else if (battle.mode === 'tutorial') {
+          if (tab.lane === battle.acayLane) {
+            battle.dodges++
+            this.resolved.push({ tab, result: 'dodge', resolveMs: performance.now() })
+            ctx.audio.playSfx('guitar')
+          } else {
+            battle.hits++
+            this.resolved.push({ tab, result: 'hit', resolveMs: performance.now() })
+          }
         } else {
-          battle.dodges++
-          this.resolved.push({ tab, result: 'dodge', resolveMs: performance.now() })
+          if (tab.ghost) {
+            this.resolved.push({ tab, result: 'dodge', resolveMs: performance.now() })
+          } else if (tab.lane === battle.acayLane) {
+            battle.hp--
+            battle.hits++
+            this.resolved.push({ tab, result: 'hit', resolveMs: performance.now() })
+            this.blinkUntilMs = performance.now() + CONFIG.rhythm.blinkDurationMs
+          } else {
+            battle.dodges++
+            this.resolved.push({ tab, result: 'dodge', resolveMs: performance.now() })
+          }
         }
       } else {
         remaining.push(tab)
@@ -142,22 +219,59 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
     }
     battle.tabs = remaining
 
-    // Limpiar resolved antiguos (>400ms)
+    // Limpiar resolved antiguos
     const now = performance.now()
     this.resolved = this.resolved.filter((r) => now - r.resolveMs < 400)
 
-    // ── Fin de batalla ──
-    if (battle.hp <= 0) {
-      this.finished = true
-      ctx.toast(t('battle.defeat'))
-      ctx.screens.requestSwitch('explore', undefined, CONFIG.fade.normal)
-      return
+    // ── Turn-based: switch de turno cuando se resuelven todos los tabs ──
+    if (battle.turnBased && battle.turnTabsResolved >= battle.turnTabsTotal && battle.tabs.length === 0) {
+      // Switch turno + generar nuevos tabs
+      battle.turn = battle.turn === 'player' ? 'enemy' : 'player'
+      battle.turnTabsResolved = 0
+      const newElapsed = (performance.now() - battle.startMs) / 1000 + 1.5 // 1.5s de pausa entre turnos
+      battle.tabs = this.generateTurnTabs(battle.lanes, newElapsed, battle.turnTabsTotal, 0.8)
+      ctx.syncUI()
     }
-    if (elapsed >= battle.durationSec) {
-      this.finished = true
-      ctx.toast(t('battle.victory'))
-      ctx.screens.requestSwitch('explore', undefined, CONFIG.fade.normal)
-      return
+
+    // ── Fin de batalla ──
+    if (battle.turnBased) {
+      // Win: Duende HP = 0
+      if (battle.enemyHp <= 0) {
+        this.finished = true
+        ctx.state.flags.questGauchoCompleted = true
+        ctx.state.addItem({ id: 'vara', label: t('scene02.vara_label'), icon: 'ui.item_vara', description: t('scene02.vara_desc') })
+        ctx.toast(t('battle.victory_duende'))
+        ctx.screens.requestSwitch('explore', undefined, CONFIG.fade.normal)
+        return
+      }
+      // Lose: Acay HP = 0
+      if (battle.hp <= 0) {
+        this.finished = true
+        ctx.toast(t('battle.defeat'))
+        ctx.screens.requestSwitch('explore', undefined, CONFIG.fade.normal)
+        return
+      }
+    } else if (battle.mode === 'tutorial') {
+      if (battle.tabs.length === 0 || elapsed >= battle.durationSec) {
+        this.finished = true
+        ctx.state.flags.tutorialComplete = true
+        ctx.toast(t('battle.tutorial_complete'))
+        ctx.screens.requestSwitch('explore', undefined, CONFIG.fade.normal)
+        return
+      }
+    } else {
+      if (battle.hp <= 0) {
+        this.finished = true
+        ctx.toast(t('battle.defeat'))
+        ctx.screens.requestSwitch('explore', undefined, CONFIG.fade.normal)
+        return
+      }
+      if (elapsed >= battle.durationSec) {
+        this.finished = true
+        ctx.toast(t('battle.victory'))
+        ctx.screens.requestSwitch('explore', undefined, CONFIG.fade.normal)
+        return
+      }
     }
 
     // ── ESC: cancelar ──
@@ -179,8 +293,12 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
     const cfg = CONFIG.rhythm
     const elapsed = (performance.now() - battle.startMs) / 1000
 
-    // ── Tercer plano: antagonista (grande, arriba, semi-transparente) ──
-    const antAsset = ANTAGONISTS[battle.antagonistId]?.asset ?? 'ant.shadow'
+    // ── Tercer plano: antagonista o gaucho (tutorial) ──
+    const antAsset = battle.mode === 'tutorial'
+      ? 'prop.gaucho_awake'
+      : battle.turnBased
+        ? (ANTAGONISTS[battle.antagonistId]?.asset ?? 'ant.duende')
+        : (ANTAGONISTS[battle.antagonistId]?.asset ?? 'ant.shadow')
     try {
       const antImg = ctx.assets.get(antAsset)
       const antSize = ctx.assets.getSize(antAsset)
@@ -214,7 +332,10 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
       const baseH = 18
       const w = baseW * pos.scale
       const h = baseH * pos.scale
-      const color = tab.ghost ? PALETTE.tabGhost : (tab.lane === battle.acayLane ? PALETTE.tabHit : PALETTE.tab)
+      // Color del tab: player turn = dorado (tocar), enemy turn = rojo (esquivar)
+      const color = battle.turnBased
+        ? (battle.turn === 'player' ? PALETTE.dorado : (tab.lane === battle.acayLane ? PALETTE.tabHit : PALETTE.tab))
+        : (tab.ghost ? PALETTE.tabGhost : (tab.lane === battle.acayLane ? PALETTE.tabHit : PALETTE.tab))
       const alpha = Math.min(1, p * 2) * (tab.ghost ? 0.5 : 1)
       renderer.roundRect(pos.x - w / 2, pos.y - h / 2, w, h, 4 * pos.scale, color, alpha)
       // Brillo del tab (no ghosts)
@@ -279,19 +400,68 @@ export class RhythmBattleScreen implements GameScreen<'rhythm-battle', AcayGameS
     renderer.vignette(0.35)
   }
 
-  /** HUD canvas: HP (corazones terracota) + dodges + hint de esquive. */
+  /** HUD canvas: turn-based (HPs duales + turno), tutorial o dodge. */
   private drawHud(renderer: Renderer, battle: RhythmBattleState, elapsed: number): void {
     const cfg = CONFIG.rhythm
-    // HP corazones (esquina sup-izq)
+
+    if (battle.turnBased) {
+      // Turn-based: Acay HP (izq) + Duende HP (der) + turno (centro)
+      // Acay HP corazones
+      for (let i = 0; i < cfg.maxHp; i++) {
+        const x = 30 + i * 30, y = 30, filled = i < battle.hp
+        const c = filled ? PALETTE.acento : 'rgba(60,40,20,0.4)'
+        renderer.ellipse(x - 6, y, 8, 8, c)
+        renderer.ellipse(x + 6, y, 8, 8, c)
+        const s = renderer.ctx; s.fillStyle = c; s.beginPath()
+        s.moveTo(x - 12, y + 2); s.lineTo(x + 12, y + 2); s.lineTo(x, y + 16); s.closePath(); s.fill()
+      }
+      renderer.text(t('battle.hp'), 30, 65, { size: 12, color: PALETTE.pergamino, align: 'left', baseline: 'alphabetic' })
+      // Duende HP barras (der)
+      renderer.text(t('battle.duende_hp'), VIRTUAL_WIDTH - 20, 65, { size: 12, color: PALETTE.pergamino, align: 'right', baseline: 'alphabetic' })
+      for (let i = 0; i < battle.enemyMaxHp; i++) {
+        const x = VIRTUAL_WIDTH - 20 - i * 30, y = 30, filled = i < battle.enemyHp
+        renderer.roundRect(x - 12, y - 12, 24, 24, 4, filled ? PALETTE.tabHit : 'rgba(60,40,20,0.4)')
+      }
+      // Turno (centro)
+      const turnText = battle.turn === 'player' ? t('battle.turn_player_title') : t('battle.turn_enemy_title')
+      renderer.text(turnText, VIRTUAL_WIDTH / 2, 30, { size: 18, weight: 'bold', color: battle.turn === 'player' ? PALETTE.dorado : PALETTE.tabHit, align: 'center', baseline: 'alphabetic', font: 'serif' })
+      // Hint
+      const hint = battle.turn === 'player' ? t('battle.turn_player') : t('battle.turn_enemy')
+      renderer.text(hint, VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT * 0.78, { size: 14, color: 'rgba(230,182,85,0.7)', align: 'center', baseline: 'middle' })
+      return
+    }
+
+    if (battle.mode === 'tutorial') {
+      // Tutorial: sin HP. Muestra "Tutorial" + notas tocadas/perdidas.
+      renderer.text(t('battle.tutorial_title'), 30, 30, {
+        size: 18, weight: 'bold', color: PALETTE.dorado, align: 'left', baseline: 'alphabetic', font: 'serif',
+      })
+      renderer.text(`${t('battle.notes_played')}: ${battle.dodges}`, VIRTUAL_WIDTH - 20, 30, {
+        size: 16, weight: 'bold', color: PALETTE.dorado, align: 'right', baseline: 'alphabetic', font: 'serif',
+      })
+      renderer.text(`${t('battle.notes_missed')}: ${battle.hits}`, VIRTUAL_WIDTH - 20, 52, {
+        size: 14, color: 'rgba(243,227,194,0.5)', align: 'right', baseline: 'alphabetic',
+      })
+      // Timer
+      const remain = Math.max(0, battle.durationSec - elapsed)
+      renderer.text(`${remain.toFixed(1)}s`, VIRTUAL_WIDTH / 2, 30, {
+        size: 18, weight: 'bold', color: PALETTE.pergamino, align: 'center', baseline: 'alphabetic', font: 'serif',
+      })
+      // Hint: tocar las notas (estar en la lane del tab)
+      renderer.text(t('battle.tutorial_hint'), VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT * 0.78, {
+        size: 14, color: 'rgba(230,182,85,0.7)', align: 'center', baseline: 'middle',
+      })
+      return
+    }
+
+    // Dodge mode: HP corazones (esquina sup-izq)
     for (let i = 0; i < cfg.maxHp; i++) {
       const x = 30 + i * 30
       const y = 30
       const filled = i < battle.hp
-      // Corazón simple (dos círculos + triángulo)
       const c = filled ? PALETTE.acento : 'rgba(60,40,20,0.4)'
       renderer.ellipse(x - 6, y, 8, 8, c)
       renderer.ellipse(x + 6, y, 8, 8, c)
-      // triángulo inferior
       const save = renderer.ctx
       save.fillStyle = c
       save.beginPath()

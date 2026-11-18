@@ -42,6 +42,7 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
   // ─── Antagonistas (siluetas mockup) ───
   'ant.ucumar': { type: 'procedural', drawer: 'antagonist_ucumar' },
   'ant.shadow': { type: 'procedural', drawer: 'antagonist_shadow' },
+  'ant.duende': { type: 'procedural', drawer: 'duende' },
 
   // ─── Escenarios ───
   'scene.river_shore': { type: 'procedural', drawer: 'explore_background' },
@@ -57,6 +58,8 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
 
   // ─── Escena 01: rocas en el río ───
   'scene.rocks_in_river': { type: 'procedural', drawer: 'rocks_in_river' },
+  'scene.unstable_rock': { type: 'procedural', drawer: 'unstable_rock' },
+  'scene.wood_bridge': { type: 'procedural', drawer: 'wood_bridge' },
 
   // ─── Escena 02: Campamento del Gaucho ───
   'scene.campamento_background': { type: 'procedural', drawer: 'campamento_background' },
@@ -74,17 +77,31 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
   'ui.item_wood': { type: 'placeholder', label: 'Maderas', color: '#7c5230' },
   'ui.item_poncho': { type: 'placeholder', label: 'Poncho', color: '#a3552f' },
   'ui.item_lentes': { type: 'placeholder', label: 'Lentes', color: '#9aa0a0' },
+  'ui.item_vara': { type: 'placeholder', label: 'Vara de Hierro', color: '#6e7474' },
 
   // ─── Audio (mockup: procedural, sin pistas reales todavía) ───
   'audio.music_explore': { type: 'procedural' },
   'audio.music_battle': { type: 'procedural' },
+  // OST placeholders por escena (loop). Reemplazar por file cuando haya audio real:
+  //   'audio.music_ost_river_shore': { type: 'file', src: '/assets/audio/ost_river_shore.mp3' },
+  'audio.music_ost_river_shore': { type: 'placeholder', label: 'OST River Shore' },
+  'audio.music_ost_campamento': { type: 'placeholder', label: 'OST Campamento' },
+  'audio.music_ost_battle': { type: 'placeholder', label: 'OST Battle' },
+  'audio.music_ost_tutorial': { type: 'placeholder', label: 'OST Tutorial' },
 }
 
 /** IDs de assets que la UI React necesita como URL para <img>. */
 export const UI_ASSET_URLS: string[] = [
   'ui.item_guitar',
   'ui.item_relic',
+  'ui.item_pava',
+  'ui.item_wood',
+  'ui.item_poncho',
+  'ui.item_lentes',
+  'ui.item_vara',
+  'ui.title_logo',
   'acay.back',
   'ant.ucumar',
   'ant.shadow',
+  'ant.duende',
 ]

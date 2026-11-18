@@ -132,35 +132,101 @@ export class AudioManager {
   }
 
   /**
-   * Reproduce un efecto de sonido one-shot (mockup). Para sonidos puntuales
-   * como notas de guitarra, clicks, etc. Usa el AudioContext del motor.
-   * name: 'guitar' → nota pluck (triangle, decaimiento 0.3s).
+   * ═══════════════════════════════════════════════════════════════════
+   *  SISTEMA REUTILIZABLE DE AUDIO — SFX + OST con parámetros.
+   * ═══════════════════════════════════════════════════════════════════
+   *
+   * Funciones genéricas para reproducir sonidos puntuales (SFX) y loops
+   * (OST/soundtrack). Parámetros: nombre, volumen, loop, duración.
+   * El juego configura qué sonidos existen; el motor los reproduce.
+   *
+   * Uso:
+   *   audio.playSfx('guitar')              // one-shot nota de guitarra
+   *   audio.playLoop('ost_explore', { src: '/assets/audio/explore.mp3', volume: 0.3 })
+   *   audio.stopLoop('ost_explore')
+   *   audio.setLoopVolume('ost_explore', 0.5)
    */
-  playSfx(name: string): void {
+
+  /** Loops activos (OST/soundtrack) — registrados por nombre. */
+  private loops: Map<string, { audio: HTMLAudioElement; gain: GainNode | null }> = new Map()
+
+  /**
+   * Reproduce un efecto de sonido one-shot.
+   * name: identificador del SFX ('guitar', 'click', 'babble', etc.).
+   * opts: { volume?, duration? } — parámetros opcionales.
+   */
+  playSfx(name: string, opts?: { volume?: number; duration?: number }): void {
     if (!this.ctx || !this.master || !this.unlocked) return
     const ctx = this.ctx
     const now = ctx.currentTime
+    const vol = opts?.volume ?? 0.15
+    const dur = opts?.duration ?? 0.3
     if (name === 'guitar') {
-      // Nota pluck: triangle, freq aleatoria pentatónica, decaimiento 0.3s
-      const notes = [196, 220, 247, 294, 330, 392] // G3 A3 B3 D4 E4 G4
+      const notes = [196, 220, 247, 294, 330, 392]
       const freq = notes[Math.floor(Math.random() * notes.length)]
       const osc = ctx.createOscillator()
       osc.type = 'triangle'
       osc.frequency.value = freq
       const g = ctx.createGain()
-      const peak = 0.15
       g.gain.setValueAtTime(0.0001, now)
-      g.gain.linearRampToValueAtTime(peak, now + 0.005)
-      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.3)
+      g.gain.linearRampToValueAtTime(vol, now + 0.005)
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur)
       osc.connect(g)
       g.connect(this.master)
       osc.start(now)
-      osc.stop(now + 0.35)
+      osc.stop(now + dur + 0.05)
     }
+  }
+
+  /**
+   * Reproduce un loop (OST/soundtrack). Si ya está sonando, no hace nada.
+   * name: identificador del loop ('ost_explore', 'ost_battle', etc.).
+   * opts: { src?, volume?, loop? } — src es la URL del archivo; si no se
+   *   provee, usa el assetIndex del motor (audio.music_<name>).
+   * loop: default true (soundtrack). false = one-shot con duración del archivo.
+   */
+  playLoop(name: string, opts?: { src?: string; volume?: number; loop?: boolean }): void {
+    if (this.loops.has(name)) return // ya sonando
+    const src = opts?.src ?? this.audioSources[name] ?? ''
+    if (!src) return // sin source: silencio (degradación elegante)
+    const volume = opts?.volume ?? 0.3
+    const loop = opts?.loop ?? true
+    const audio = new Audio(src)
+    audio.loop = loop
+    audio.volume = this.muted ? 0 : volume
+    void audio.play().catch(() => { /* autoplay bloqueado */ })
+    this.loops.set(name, { audio, gain: null })
+  }
+
+  /** Detiene un loop por nombre. */
+  stopLoop(name: string): void {
+    const entry = this.loops.get(name)
+    if (!entry) return
+    entry.audio.pause()
+    entry.audio.removeAttribute('src')
+    this.loops.delete(name)
+  }
+
+  /** Detiene todos los loops. */
+  stopAllLoops(): void {
+    for (const name of this.loops.keys()) this.stopLoop(name)
+  }
+
+  /** Cambia el volumen de un loop por nombre. */
+  setLoopVolume(name: string, volume: number): void {
+    const entry = this.loops.get(name)
+    if (!entry) return
+    entry.audio.volume = this.muted ? 0 : Math.min(1, Math.max(0, volume))
+  }
+
+  /** ¿Está sonando un loop? */
+  isLoopPlaying(name: string): boolean {
+    return this.loops.has(name)
   }
 
   dispose(): void {
     this.stop()
+    this.stopAllLoops()
     if (this.ctx) {
       try {
         void this.ctx.close()

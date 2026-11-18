@@ -1,0 +1,1254 @@
+     1→import type { DrawerDef } from '@/engine/assets/drawers'
+     2→import { PALETTE } from '@/game-next/core/config'
+     3→
+     4→/**
+     5→ * ═══════════════════════════════════════════════════════════════════
+     6→ *  DRAWERS — arte procedural mockup para ACAY / BEYOND THE RIVER.
+     7→ * ═══════════════════════════════════════════════════════════════════
+     8→ *
+     9→ * Mockup: arte procedural Canvas 2D con paleta andina (terracota, ocre,
+    10→ * marrón, verde agostado, crema). SIN azul/índigo. Reemplazable vía el
+    11→ * índice de assets (editar src/game-next/data/assetIndex.ts).
+    12→ *
+    13→ * Drawers:
+    14→ *   - acay_back: Acay de espaldas (poncho + sombrero). Para batalla rítmica.
+    15→ *   - antagonist_ucumar / antagonist_shadow: siluetas de antagonistas.
+    16→ *   - explore_background: ribera del río Calchaquí (POV).
+    17→ *   - rhythm_track: pista en perspectiva para batalla rítmica.
+    18→ *   - narrative_*: elementos interactivos de la escena POV.
+    19→ *   - rocks_in_river: rocas atrapadas en el río (escena 01).
+    20→ *   - campamento_background: fondo del campamento del gaucho (escena 02).
+    21→ *   - gaucho_sleeping / gaucho_awake / cardon / kettle / wood_pile / firepit_ashes:
+    22→ *     elementos de la escena 02 (campamento del gaucho).
+    23→ */
+    24→
+    25→type C = CanvasRenderingContext2D
+    26→
+    27→/* ────────────────────── Helpers ────────────────────── */
+    28→
+    29→function circle(ctx: C, cx: number, cy: number, r: number, color: string): void {
+    30→  ctx.beginPath()
+    31→  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+    32→  ctx.fillStyle = color
+    33→  ctx.fill()
+    34→}
+    35→
+    36→function poly(ctx: C, pts: Array<[number, number]>, color: string): void {
+    37→  ctx.beginPath()
+    38→  pts.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)))
+    39→  ctx.closePath()
+    40→  ctx.fillStyle = color
+    41→  ctx.fill()
+    42→}
+    43→
+    44→function rect(ctx: C, x: number, y: number, w: number, h: number, color: string): void {
+    45→  ctx.fillStyle = color
+    46→  ctx.fillRect(x, y, w, h)
+    47→}
+    48→
+    49→/* ────────────────────── Acay de espaldas ────────────────────── */
+    50→
+    51→const acayBack: DrawerDef = {
+    52→  w: 120,
+    53→  h: 180,
+    54→  draw(ctx: C, w: number, h: number): void {
+    55→    const cx = w / 2
+    56→    ctx.save()
+    57→    ctx.globalAlpha = 0.3
+    58→    ctx.beginPath()
+    59→    ctx.ellipse(cx, h - 4, w * 0.4, 6, 0, 0, Math.PI * 2)
+    60→    ctx.fillStyle = '#000'
+    61→    ctx.fill()
+    62→    ctx.restore()
+    63→
+    64→    poly(ctx, [
+    65→      [cx - 28, 60], [cx + 28, 60],
+    66→      [cx + 48, h - 8], [cx - 48, h - 8],
+    67→    ], PALETTE.poncho)
+    68→    poly(ctx, [
+    69→      [cx - 28, 60], [cx - 18, 60],
+    70→      [cx - 30, h - 8], [cx - 48, h - 8],
+    71→    ], PALETTE.ponchoOscuro)
+    72→    rect(ctx, cx - 8, 48, 16, 16, PALETTE.ponchoOscuro)
+    73→    circle(ctx, cx, 38, 18, PALETTE.sombrero)
+    74→    ctx.beginPath()
+    75→    ctx.ellipse(cx, 30, 42, 10, 0, 0, Math.PI * 2)
+    76→    ctx.fillStyle = PALETTE.sombreroAla
+    77→    ctx.fill()
+    78→    rect(ctx, cx - 14, 14, 28, 18, PALETTE.sombrero)
+    79→    ctx.beginPath()
+    80→    ctx.arc(cx, 14, 14, Math.PI, 0)
+    81→    ctx.fillStyle = PALETTE.sombrero
+    82→    ctx.fill()
+    83→  },
+    84→}
+    85→
+    86→/* ────────────────────── Antagonistas ────────────────────── */
+    87→
+    88→const antagonistUcumar: DrawerDef = {
+    89→  w: 140,
+    90→  h: 200,
+    91→  draw(ctx: C, w: number, h: number): void {
+    92→    const cx = w / 2
+    93→    ctx.save()
+    94→    ctx.globalAlpha = 0.35
+    95→    ctx.beginPath()
+    96→    ctx.ellipse(cx, h - 4, w * 0.42, 7, 0, 0, Math.PI * 2)
+    97→    ctx.fillStyle = '#000'
+    98→    ctx.fill()
+    99→    ctx.restore()
+   100→
+   101→    ctx.beginPath()
+   102→    ctx.ellipse(cx, h - 70, 52, 80, 0, 0, Math.PI * 2)
+   103→    ctx.fillStyle = PALETTE.antagonista
+   104→    ctx.fill()
+   105→    ctx.beginPath()
+   106→    ctx.ellipse(cx, h - 70, 52, 80, 0, 0, Math.PI * 2)
+   107→    ctx.strokeStyle = PALETTE.antagonistaBorde
+   108→    ctx.lineWidth = 2
+   109→    ctx.stroke()
+   110→
+   111→    circle(ctx, cx, 50, 26, PALETTE.antagonista)
+   112→    poly(ctx, [[cx - 24, 38], [cx - 16, 18], [cx - 10, 36]], PALETTE.antagonista)
+   113→    poly(ctx, [[cx + 24, 38], [cx + 16, 18], [cx + 10, 36]], PALETTE.antagonista)
+   114→    circle(ctx, cx - 8, 48, 3, '#d9534f')
+   115→    circle(ctx, cx + 8, 48, 3, '#d9534f')
+   116→  },
+   117→}
+   118→
+   119→const antagonistShadow: DrawerDef = {
+   120→  w: 120,
+   121→  h: 180,
+   122→  draw(ctx: C, w: number, h: number): void {
+   123→    const cx = w / 2
+   124→    ctx.save()
+   125→    ctx.globalAlpha = 0.3
+   126→    ctx.beginPath()
+   127→    ctx.ellipse(cx, h - 4, w * 0.38, 6, 0, 0, Math.PI * 2)
+   128→    ctx.fillStyle = '#000'
+   129→    ctx.fill()
+   130→    ctx.restore()
+   131→
+   132→    poly(ctx, [
+   133→      [cx - 24, 50], [cx + 24, 50],
+   134→      [cx + 36, h - 10], [cx - 36, h - 10],
+   135→    ], PALETTE.antagonista)
+   136→    circle(ctx, cx, 36, 20, PALETTE.antagonista)
+   137→    ctx.beginPath()
+   138→    ctx.ellipse(cx, 36, 20, 20, 0, 0, Math.PI * 2)
+   139→    ctx.strokeStyle = PALETTE.antagonistaBorde
+   140→    ctx.lineWidth = 2
+   141→    ctx.stroke()
+   142→  },
+   143→}
+   144→
+   145→/* ────────────────────── Escenario: ribera del río ────────────────────── */
+   146→
+   147→const exploreBackground: DrawerDef = {
+   148→  w: 1280,
+   149→  h: 720,
+   150→  draw(ctx: C, w: number, h: number): void {
+   151→    const sky = ctx.createLinearGradient(0, 0, 0, h * 0.55)
+   152→    sky.addColorStop(0, PALETTE.cieloBajo)
+   153→    sky.addColorStop(1, PALETTE.tierra)
+   154→    ctx.fillStyle = sky
+   155→    ctx.fillRect(0, 0, w, h * 0.55)
+   156→
+   157→    const mountains: Array<[number, number, number]> = [
+   158→      [0, 380, 220], [180, 360, 260], [420, 380, 200],
+   159→      [620, 350, 280], [880, 380, 220], [1080, 360, 240],
+   160→    ]
+   161→    for (const [x, baseY, peakH] of mountains) {
+   162→      poly(ctx, [[x, baseY], [x + 180, baseY - peakH], [x + 360, baseY]], PALETTE.tierraOscura)
+   163→    }
+   164→
+   165→    const river = ctx.createLinearGradient(0, h * 0.5, 0, h * 0.62)
+   166→    river.addColorStop(0, '#6e6450')
+   167→    river.addColorStop(0.5, '#5a5440')
+   168→    river.addColorStop(1, '#4a4438')
+   169→    ctx.fillStyle = river
+   170→    ctx.fillRect(0, h * 0.5, w, h * 0.12)
+   171→
+   172→    ctx.save()
+   173→    ctx.globalAlpha = 0.15
+   174→    ctx.fillStyle = PALETTE.cieloBajo
+   175→    for (let i = 0; i < 8; i++) {
+   176→      const y = h * 0.5 + (i / 8) * h * 0.12 + 4
+   177→      ctx.fillRect(0, y, w, 2)
+   178→    }
+   179→    ctx.restore()
+   180→
+   181→    const ground = ctx.createLinearGradient(0, h * 0.62, 0, h)
+   182→    ground.addColorStop(0, PALETTE.tierra)
+   183→    ground.addColorStop(1, PALETTE.tierraOscura)
+   184→    ctx.fillStyle = ground
+   185→    ctx.fillRect(0, h * 0.62, w, h * 0.38)
+   186→
+   187→    ctx.save()
+   188→    ctx.fillStyle = PALETTE.piedraOscura
+   189→    const stones: Array<[number, number, number]> = [
+   190→      [120, 540, 14], [200, 580, 10], [340, 560, 18], [520, 600, 12],
+   191→      [680, 540, 16], [820, 590, 11], [980, 560, 15], [1140, 580, 13],
+   192→      [60, 660, 20], [280, 680, 16], [500, 670, 22], [740, 680, 18],
+   193→      [960, 670, 20], [1180, 680, 16],
+   194→    ]
+   195→    for (const [x, y, r] of stones) {
+   196→      ctx.beginPath()
+   197→      ctx.ellipse(x, y, r, r * 0.7, 0, 0, Math.PI * 2)
+   198→      ctx.fill()
+   199→    }
+   200→    ctx.restore()
+   201→
+   202→    const vig = ctx.createRadialGradient(w / 2, h / 2, 200, w / 2, h / 2, 700)
+   203→    vig.addColorStop(0, 'rgba(0,0,0,0)')
+   204→    vig.addColorStop(1, 'rgba(40,25,15,0.35)')
+   205→    ctx.fillStyle = vig
+   206→    ctx.fillRect(0, 0, w, h)
+   207→  },
+   208→}
+   209→
+   210→/* ────────────────────── Pista rítmica en perspectiva ────────────────────── */
+   211→
+   212→const rhythmTrack: DrawerDef = {
+   213→  w: 1280,
+   214→  h: 720,
+   215→  draw(ctx: C, w: number, h: number): void {
+   216→    const bg = ctx.createLinearGradient(0, 0, 0, h)
+   217→    bg.addColorStop(0, '#2a1a10')
+   218→    bg.addColorStop(1, '#0f0a08')
+   219→    ctx.fillStyle = bg
+   220→    ctx.fillRect(0, 0, w, h)
+   221→
+   222→    const lanes = 3
+   223→    const topY = h * 0.15
+   224→    const botY = h * 0.92
+   225→    const topHalfW = w * 0.12
+   226→    const botHalfW = w * 0.42
+   227→    const cx = w / 2
+   228→
+   229→    ctx.save()
+   230→    ctx.beginPath()
+   231→    ctx.moveTo(cx - topHalfW, topY)
+   232→    ctx.lineTo(cx + topHalfW, topY)
+   233→    ctx.lineTo(cx + botHalfW, botY)
+   234→    ctx.lineTo(cx - botHalfW, botY)
+   235→    ctx.closePath()
+   236→    const trackGrad = ctx.createLinearGradient(0, topY, 0, botY)
+   237→    trackGrad.addColorStop(0, PALETTE.laneBorde)
+   238→    trackGrad.addColorStop(1, PALETTE.lane)
+   239→    ctx.fillStyle = trackGrad
+   240→    ctx.fill()
+   241→    ctx.restore()
+   242→
+   243→    ctx.save()
+   244→    ctx.strokeStyle = 'rgba(230,182,85,0.3)'
+   245→    ctx.lineWidth = 2
+   246→    for (let i = 0; i <= lanes; i++) {
+   247→      const t = i / lanes
+   248→      const topX = cx - topHalfW + t * topHalfW * 2
+   249→      const botX = cx - botHalfW + t * botHalfW * 2
+   250→      ctx.beginPath()
+   251→      ctx.moveTo(topX, topY)
+   252→      ctx.lineTo(botX, botY)
+   253→      ctx.stroke()
+   254→    }
+   255→    ctx.restore()
+   256→
+   257→    ctx.save()
+   258→    ctx.strokeStyle = PALETTE.acento
+   259→    ctx.lineWidth = 3
+   260→    ctx.globalAlpha = 0.6
+   261→    const hitY = botY - 30
+   262→    const hitHalfW = botHalfW * 0.92
+   263→    ctx.beginPath()
+   264→    ctx.moveTo(cx - hitHalfW, hitY)
+   265→    ctx.lineTo(cx + hitHalfW, hitY)
+   266→    ctx.stroke()
+   267→    ctx.restore()
+   268→  },
+   269→}
+   270→
+   271→/* ────────────────────── Elementos narrativos ────────────────────── */
+   272→
+   273→const narrativeRock: DrawerDef = {
+   274→  w: 80, h: 60,
+   275→  draw(ctx: C, w: number, h: number): void {
+   276→    ctx.save()
+   277→    ctx.globalAlpha = 0.3
+   278→    ctx.beginPath()
+   279→    ctx.ellipse(w / 2, h - 4, w * 0.4, 5, 0, 0, Math.PI * 2)
+   280→    ctx.fillStyle = '#000'
+   281→    ctx.fill()
+   282→    ctx.restore()
+   283→    poly(ctx, [
+   284→      [10, h - 8], [6, h * 0.4], [w * 0.3, 8],
+   285→      [w * 0.7, 6], [w - 8, h * 0.5], [w - 6, h - 8],
+   286→    ], PALETTE.piedra)
+   287→    poly(ctx, [
+   288→      [10, h - 8], [6, h * 0.4], [w * 0.35, h * 0.45], [w * 0.5, h - 8],
+   289→    ], PALETTE.piedraOscura)
+   290→  },
+   291→}
+   292→
+   293→const narrativeTree: DrawerDef = {
+   294→  w: 100, h: 160,
+   295→  draw(ctx: C, w: number, h: number): void {
+   296→    const cx = w / 2
+   297→    ctx.save()
+   298→    ctx.globalAlpha = 0.3
+   299→    ctx.beginPath()
+   300→    ctx.ellipse(cx, h - 4, w * 0.35, 5, 0, 0, Math.PI * 2)
+   301→    ctx.fillStyle = '#000'
+   302→    ctx.fill()
+   303→    ctx.restore()
+   304→    rect(ctx, cx - 8, h * 0.4, 16, h * 0.55, PALETTE.sombrero)
+   305→    ctx.save()
+   306→    ctx.strokeStyle = PALETTE.sombrero
+   307→    ctx.lineWidth = 5
+   308→    ctx.lineCap = 'round'
+   309→    ctx.beginPath()
+   310→    ctx.moveTo(cx, h * 0.45)
+   311→    ctx.lineTo(cx - 30, h * 0.25)
+   312→    ctx.moveTo(cx, h * 0.4)
+   313→    ctx.lineTo(cx + 28, h * 0.2)
+   314→    ctx.moveTo(cx - 4, h * 0.38)
+   315→    ctx.lineTo(cx - 20, h * 0.15)
+   316→    ctx.moveTo(cx + 4, h * 0.35)
+   317→    ctx.lineTo(cx + 24, h * 0.1)
+   318→    ctx.stroke()
+   319→    ctx.restore()
+   320→  },
+   321→}
+   322→
+   323→const narrativeRuin: DrawerDef = {
+   324→  w: 140, h: 110,
+   325→  draw(ctx: C, w: number, h: number): void {
+   326→    ctx.save()
+   327→    ctx.globalAlpha = 0.3
+   328→    ctx.beginPath()
+   329→    ctx.ellipse(w / 2, h - 4, w * 0.45, 6, 0, 0, Math.PI * 2)
+   330→    ctx.fillStyle = '#000'
+   331→    ctx.fill()
+   332→    ctx.restore()
+   333→    poly(ctx, [
+   334→      [8, h - 8], [8, h * 0.3], [30, h * 0.2], [50, h * 0.35],
+   335→      [80, h * 0.15], [110, h * 0.3], [w - 8, h * 0.25], [w - 8, h - 8],
+   336→    ], PALETTE.tierraOscura)
+   337→    rect(ctx, w * 0.4, h * 0.5, 12, h * 0.4, '#0003')
+   338→    ctx.save()
+   339→    ctx.strokeStyle = PALETTE.tierra
+   340→    ctx.lineWidth = 1
+   341→    for (let i = 0; i < 3; i++) {
+   342→      ctx.beginPath()
+   343→      ctx.moveTo(12, h * 0.5 + i * 18)
+   344→      ctx.lineTo(w - 12, h * 0.5 + i * 18)
+   345→      ctx.stroke()
+   346→    }
+   347→    ctx.restore()
+   348→  },
+   349→}
+   350→
+   351→const narrativeCoquena: DrawerDef = {
+   352→  w: 110, h: 150,
+   353→  draw(ctx: C, w: number, h: number): void {
+   354→    const cx = w / 2
+   355→    ctx.save()
+   356→    ctx.globalAlpha = 0.3
+   357→    ctx.beginPath()
+   358→    ctx.ellipse(cx, h - 4, w * 0.38, 5, 0, 0, Math.PI * 2)
+   359→    ctx.fillStyle = '#000'
+   360→    ctx.fill()
+   361→    ctx.restore()
+   362→    poly(ctx, [
+   363→      [cx - 30, h * 0.3], [cx + 30, h * 0.3],
+   364→      [cx + 42, h - 8], [cx - 42, h - 8],
+   365→    ], PALETTE.ponchoOscuro)
+   366→    circle(ctx, cx, h * 0.28, 14, PALETTE.sombrero)
+   367→    ctx.beginPath()
+   368→    ctx.ellipse(cx, h * 0.24, 32, 7, 0, 0, Math.PI * 2)
+   369→    ctx.fillStyle = PALETTE.sombreroAla
+   370→    ctx.fill()
+   371→    ctx.save()
+   372→    ctx.globalAlpha = 0.5
+   373→    circle(ctx, cx + 38, h - 14, 8, PALETTE.acento)
+   374→    ctx.restore()
+   375→  },
+   376→}
+   377→
+   378→/* ────────────────────── Logo del título (placeholder de texto) ────────────────────── */
+   379→
+   380→/**
+   381→ * title_logo: placeholder del título del juego. Dibuja "ACAY" (grande,
+   382→ * serif, blanco) centrado arriba y "Beyond the river" (más chico, debajo).
+   383→ * Reemplazable por una imagen real via el índice:
+   384→ *   'ui.title_logo': { type: 'file', src: '/assets/ui/title.png' }
+   385→ */
+   386→const titleLogo: DrawerDef = {
+   387→  w: 800,
+   388→  h: 280,
+   389→  draw(ctx: C, w: number, h: number): void {
+   390→    const cx = w / 2
+   391→    // "ACAY" — grande, serif, blanco
+   392→    ctx.save()
+   393→    ctx.fillStyle = '#ffffff'
+   394→    ctx.font = 'bold 120px Georgia, "Times New Roman", serif'
+   395→    ctx.textAlign = 'center'
+   396→    ctx.textBaseline = 'middle'
+   397→    // Sombra sutil
+   398→    ctx.shadowColor = 'rgba(0,0,0,0.5)'
+   399→    ctx.shadowBlur = 8
+   400→    ctx.shadowOffsetY = 3
+   401→    ctx.fillText('ACAY', cx, h * 0.38)
+   402→    ctx.restore()
+   403→    // "Beyond the river" — más chico, debajo
+   404→    ctx.save()
+   405→    ctx.fillStyle = 'rgba(230,182,85,0.9)'
+   406→    ctx.font = 'italic 32px Georgia, "Times New Roman", serif'
+   407→    ctx.textAlign = 'center'
+   408→    ctx.textBaseline = 'middle'
+   409→    ctx.fillText('Beyond the river', cx, h * 0.72)
+   410→    ctx.restore()
+   411→  },
+   412→}
+   413→
+   414→/* ────────────────────── Elementos pickup (guitarra, reliquia) ────────────────────── */
+   415→
+   416→const narrativeGuitar: DrawerDef = {
+   417→  w: 70, h: 100,
+   418→  draw(ctx: C, w: number, h: number): void {
+   419→    const cx = w / 2
+   420→    // Sombra
+   421→    ctx.save()
+   422→    ctx.globalAlpha = 0.3
+   423→    ctx.beginPath()
+   424→    ctx.ellipse(cx, h - 4, w * 0.35, 4, 0, 0, Math.PI * 2)
+   425→    ctx.fillStyle = '#000'
+   426→    ctx.fill()
+   427→    ctx.restore()
+   428→    // Cuerpo (óvalo terracota)
+   429→    ctx.beginPath()
+   430→    ctx.ellipse(cx, h * 0.65, w * 0.32, h * 0.25, 0, 0, Math.PI * 2)
+   431→    ctx.fillStyle = PALETTE.poncho
+   432→    ctx.fill()
+   433→    // Mástil (rect marrón)
+   434→    rect(ctx, cx - 4, h * 0.1, 8, h * 0.45, PALETTE.sombrero)
+   435→    // Cabeza
+   436→    rect(ctx, cx - 6, h * 0.05, 12, 8, PALETTE.sombreroAla)
+   437→    // Puente (línea oscura)
+   438→    rect(ctx, cx - 8, h * 0.7, 16, 3, PALETTE.sombrero)
+   439→    // Cuerdas (líneas finas)
+   440→    ctx.save()
+   441→    ctx.strokeStyle = '#f3e3c2'
+   442→    ctx.lineWidth = 0.8
+   443→    for (let i = -2; i <= 2; i++) {
+   444→      ctx.beginPath()
+   445→      ctx.moveTo(cx + i, h * 0.1)
+   446→      ctx.lineTo(cx + i * 1.5, h * 0.78)
+   447→      ctx.stroke()
+   448→    }
+   449→    ctx.restore()
+   450→  },
+   451→}
+   452→
+   453→const narrativeRelic: DrawerDef = {
+   454→  w: 50, h: 60,
+   455→  draw(ctx: C, w: number, h: number): void {
+   456→    const cx = w / 2
+   457→    // Sombra
+   458→    ctx.save()
+   459→    ctx.globalAlpha = 0.3
+   460→    ctx.beginPath()
+   461→    ctx.ellipse(cx, h - 4, w * 0.3, 4, 0, 0, Math.PI * 2)
+   462→    ctx.fillStyle = '#000'
+   463→    ctx.fill()
+   464→    ctx.restore()
+   465→    // Reliquia (piedra tallada dorada)
+   466→    poly(ctx, [
+   467→      [cx - 16, h - 8], [cx - 14, h * 0.3], [cx - 6, 8],
+   468→      [cx + 6, 8], [cx + 14, h * 0.3], [cx + 16, h - 8],
+   469→    ], PALETTE.dorado)
+   470→    // Símbolo tallado (línea oscura)
+   471→    ctx.save()
+   472→    ctx.strokeStyle = PALETTE.sombrero
+   473→    ctx.lineWidth = 2
+   474→    ctx.beginPath()
+   475→    ctx.moveTo(cx - 8, h * 0.4)
+   476→    ctx.lineTo(cx + 8, h * 0.4)
+   477→    ctx.moveTo(cx, h * 0.3)
+   478→    ctx.lineTo(cx, h * 0.7)
+   479→    ctx.stroke()
+   480→    ctx.restore()
+   481→    // Brillo
+   482→    ctx.save()
+   483→    ctx.globalAlpha = 0.4
+   484→    poly(ctx, [[cx - 10, h - 10], [cx - 8, h * 0.35], [cx - 3, h * 0.35], [cx - 5, h - 10]], '#fff')
+   485→    ctx.restore()
+   486→  },
+   487→}
+   488→
+   489→/* ────────────────────── Acay inconsciente (tirado en el suelo) ────────────────────── */
+   490→
+   491→/**
+   492→ * acay_unconscious: Acay tirado en el suelo de costado, inconsciente.
+   493→ * Poncho + sombrero. Rostro NO visible (sombrero tapa). Respiración sutil
+   494→ * via `anim` en el assetIndex (pandeo muy chico, período 3s).
+   495→ */
+   496→const acayUnconscious: DrawerDef = {
+   497→  w: 140, h: 70,
+   498→  draw(ctx: C, w: number, h: number): void {
+   499→    const cx = w / 2
+   500→    // Sombra en el suelo
+   501→    ctx.save()
+   502→    ctx.globalAlpha = 0.3
+   503→    ctx.beginPath()
+   504→    ctx.ellipse(cx, h - 3, w * 0.42, 5, 0, 0, Math.PI * 2)
+   505→    ctx.fillStyle = '#000'
+   506→    ctx.fill()
+   507→    ctx.restore()
+   508→
+   509→    // Cuerpo acostado (poncho — óvalo terracota horizontal)
+   510→    ctx.beginPath()
+   511→    ctx.ellipse(cx, h * 0.55, w * 0.38, h * 0.32, 0, 0, Math.PI * 2)
+   512→    ctx.fillStyle = PALETTE.poncho
+   513→    ctx.fill()
+   514→    // Sombra del poncho
+   515→    ctx.beginPath()
+   516→    ctx.ellipse(cx + w * 0.1, h * 0.55, w * 0.28, h * 0.22, 0, 0, Math.PI * 2)
+   517→    ctx.fillStyle = PALETTE.ponchoOscuro
+   518→    ctx.fill()
+   519→
+   520→    // Cabeza (sombra bajo sombrero — sin rostro visible)
+   521→    circle(ctx, cx - w * 0.3, h * 0.45, 16, PALETTE.sombrero)
+   522→    // Sombrero (ala ancha, cubre la cabeza/cara)
+   523→    ctx.beginPath()
+   524→    ctx.ellipse(cx - w * 0.3, h * 0.4, 30, 7, 0, 0, Math.PI * 2)
+   525→    ctx.fillStyle = PALETTE.sombreroAla
+   526→    ctx.fill()
+   527→    rect(ctx, cx - w * 0.3 - 10, h * 0.28, 20, 12, PALETTE.sombrero)
+   528→
+   529→    // Piernas (bajo el poncho, asoman dos botitas)
+   530→    rect(ctx, cx + w * 0.25, h * 0.65, 14, 10, PALETTE.sombrero)
+   531→    rect(ctx, cx + w * 0.15, h * 0.65, 14, 10, PALETTE.sombrero)
+   532→  },
+   533→}
+   534→
+   535→/* ────────────────────── Acay de pie (frente, sombrero tapa rostro) ────────────────────── */
+   536→
+   537→/**
+   538→ * acay_stand_front: Acay de pie visto de frente. Poncho + sombrero de ala
+   539→ * ancha que cubre el rostro con sombra. Sin facciones visibles (regla del brief).
+   540→ * Usado tras despertar (1.1) y en exploración cuando mira hacia la cámara.
+   541→ */
+   542→const acayStandFront: DrawerDef = {
+   543→  w: 100, h: 170,
+   544→  draw(ctx: C, w: number, h: number): void {
+   545→    const cx = w / 2
+   546→    // Sombra en el suelo
+   547→    ctx.save()
+   548→    ctx.globalAlpha = 0.3
+   549→    ctx.beginPath()
+   550→    ctx.ellipse(cx, h - 4, w * 0.35, 5, 0, 0, Math.PI * 2)
+   551→    ctx.fillStyle = '#000'
+   552→    ctx.fill()
+   553→    ctx.restore()
+   554→
+   555→    // Piernas (dos rectángulos marrones)
+   556→    rect(ctx, cx - 14, h * 0.55, 11, h * 0.4, PALETTE.sombrero)
+   557→    rect(ctx, cx + 3, h * 0.55, 11, h * 0.4, PALETTE.sombrero)
+   558→
+   559→    // Poncho (trapecio terracota — más ancho abajo)
+   560→    poly(ctx, [
+   561→      [cx - 22, h * 0.25], [cx + 22, h * 0.25],
+   562→      [cx + 38, h - 8], [cx - 38, h - 8],
+   563→    ], PALETTE.poncho)
+   564→    // Sombra del poncho (lado izq)
+   565→    poly(ctx, [
+   566→      [cx - 22, h * 0.25], [cx - 14, h * 0.25],
+   567→      [cx - 24, h - 8], [cx - 38, h - 8],
+   568→    ], PALETTE.ponchoOscuro)
+   569→
+   570→    // Cabeza (sombra bajo el sombrero — sin rostro)
+   571→    circle(ctx, cx, h * 0.2, 15, PALETTE.sombrero)
+   572→
+   573→    // Sombrero de ala ancha (cubre completamente la cara)
+   574→    ctx.beginPath()
+   575→    ctx.ellipse(cx, h * 0.13, 38, 9, 0, 0, Math.PI * 2)
+   576→    ctx.fillStyle = PALETTE.sombreroAla
+   577→    ctx.fill()
+   578→    rect(ctx, cx - 12, h * 0.0, 24, 14, PALETTE.sombrero)
+   579→    ctx.beginPath()
+   580→    ctx.arc(cx, 0, 12, Math.PI, 0)
+   581→    ctx.fillStyle = PALETTE.sombrero
+   582→    ctx.fill()
+   583→
+   584→    // Sombra sobre la cara (bajo el ala del sombrero) — refuerza "rostro no visible"
+   585→    ctx.save()
+   586→    ctx.globalAlpha = 0.6
+   587→    rect(ctx, cx - 12, h * 0.16, 24, 8, '#1a1410')
+   588→    ctx.restore()
+   589→  },
+   590→}
+   591→
+   592→/* ────────────────────── Escena 01: Rocas en el río ────────────────────── */
+   593→
+   594→/**
+   595→ * rocks_in_river: Rocas atrapadas en el río (piedras mojadas).
+   596→ * 3-4 piedras de distintos tamaños, grises (piedra/piedraOscura) con brillo
+   597→ * húmedo. SIN sombra (están en agua). Mockup para escena 01.
+   598→ */
+   599→const rocksInRiver: DrawerDef = {
+   600→  w: 160, h: 100,
+   601→  draw(ctx: C, w: number, h: number): void {
+   602→    // Banda de agua (marrón-grisáceo, NO azul)
+   603→    const water = ctx.createLinearGradient(0, 0, 0, h)
+   604→    water.addColorStop(0, '#6e6450')
+   605→    water.addColorStop(1, '#4a4438')
+   606→    ctx.fillStyle = water
+   607→    ctx.fillRect(0, 0, w, h)
+   608→
+   609→    // Líneas sutiles de agua (reflejos)
+   610→    ctx.save()
+   611→    ctx.globalAlpha = 0.18
+   612→    ctx.fillStyle = '#8a7e60'
+   613→    for (let i = 0; i < 5; i++) {
+   614→      ctx.fillRect(0, 10 + i * 18, w, 2)
+   615→    }
+   616→    ctx.restore()
+   617→
+   618→    // Definición de piedras [cx, cy, rx, ry]
+   619→    const stones: Array<[number, number, number, number]> = [
+   620→      [w * 0.2, h * 0.55, 30, 20],
+   621→      [w * 0.5, h * 0.5, 38, 26],
+   622→      [w * 0.78, h * 0.6, 24, 16],
+   623→      [w * 0.62, h * 0.78, 18, 12],
+   624→    ]
+   625→    for (const [cx, cy, rx, ry] of stones) {
+   626→      // Cuerpo de la piedra (gris claro)
+   627→      ctx.beginPath()
+   628→      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2)
+   629→      ctx.fillStyle = PALETTE.piedra
+   630→      ctx.fill()
+   631→      // Sombra interna (gris oscuro) en el tercio inferior
+   632→      ctx.save()
+   633→      ctx.beginPath()
+   634→      ctx.ellipse(cx, cy + ry * 0.3, rx * 0.85, ry * 0.6, 0, 0, Math.PI * 2)
+   635→      ctx.fillStyle = PALETTE.piedraOscura
+   636→      ctx.globalAlpha = 0.45
+   637→      ctx.fill()
+   638→      ctx.restore()
+   639→      // Brillo húmedo (highlight diagonal arriba-izq)
+   640→      ctx.save()
+   641→      ctx.globalAlpha = 0.55
+   642→      ctx.beginPath()
+   643→      ctx.ellipse(cx - rx * 0.35, cy - ry * 0.45, rx * 0.35, ry * 0.18, -0.5, 0, Math.PI * 2)
+   644→      ctx.fillStyle = '#e8e2d0'
+   645→      ctx.fill()
+   646→      ctx.restore()
+   647→      // Línea de agua alrededor (efecto "mojado")
+   648→      ctx.save()
+   649→      ctx.globalAlpha = 0.4
+   650→      ctx.beginPath()
+   651→      ctx.ellipse(cx, cy + ry * 0.7, rx * 1.1, ry * 0.3, 0, 0, Math.PI * 2)
+   652→      ctx.fillStyle = '#3a3428'
+   653→      ctx.fill()
+   654→      ctx.restore()
+   655→    }
+   656→  },
+   657→}
+   658→
+   659→/* ────────────────────── Escena 02: Fondo del campamento ────────────────────── */
+   660→
+   661→/**
+   662→ * campamento_background: Fondo del campamento del gaucho (escena 02).
+   663→ * 1280x720. Cielo cálido, montañas lejanas, río en el medio, área de camp
+   664→ * a la derecha con suelo plano y algunas piedras. Misma paleta que explore,
+   665→ * disposición distinta.
+   666→ */
+   667→const campamentoBackground: DrawerDef = {
+   668→  w: 1280, h: 720,
+   669→  draw(ctx: C, w: number, h: number): void {
+   670→    // Cielo cálido (gradiente arriba)
+   671→    const sky = ctx.createLinearGradient(0, 0, 0, h * 0.5)
+   672→    sky.addColorStop(0, '#e8c896')
+   673→    sky.addColorStop(1, PALETTE.tierra)
+   674→    ctx.fillStyle = sky
+   675→    ctx.fillRect(0, 0, w, h * 0.5)
+   676→
+   677→    // Sol bajo (disco dorado pálido)
+   678→    ctx.save()
+   679→    ctx.globalAlpha = 0.7
+   680→    circle(ctx, w * 0.78, h * 0.18, 36, '#e8c878')
+   681→    ctx.restore()
+   682→
+   683→    // Montañas lejanas (triángulos tierraOscura, más suaves que explore)
+   684→    const mountains: Array<[number, number, number]> = [
+   685→      [-40, 360, 160], [200, 350, 200], [460, 360, 180],
+   686→      [720, 340, 240], [1000, 360, 190], [1240, 350, 170],
+   687→    ]
+   688→    for (const [x, baseY, peakH] of mountains) {
+   689→      poly(ctx, [[x, baseY], [x + 200, baseY - peakH], [x + 400, baseY]], PALETTE.tierraOscura)
+   690→    }
+   691→    // Sombra lateral en montañas (uno de cada dos)
+   692→    ctx.save()
+   693→    ctx.globalAlpha = 0.3
+   694→    for (let i = 0; i < mountains.length; i += 2) {
+   695→      const [x, baseY, peakH] = mountains[i]
+   696→      poly(ctx, [[x + 200, baseY - peakH], [x + 400, baseY], [x + 200, baseY]], '#5a4326')
+   697→    }
+   698→    ctx.restore()
+   699→
+   700→    // Río diagonal (banda marrón-grisácea, distinto layout que explore)
+   701→    ctx.save()
+   702→    ctx.beginPath()
+   703→    ctx.moveTo(0, h * 0.42)
+   704→    ctx.lineTo(w, h * 0.38)
+   705→    ctx.lineTo(w, h * 0.52)
+   706→    ctx.lineTo(0, h * 0.56)
+   707→    ctx.closePath()
+   708→    const river = ctx.createLinearGradient(0, h * 0.4, 0, h * 0.55)
+   709→    river.addColorStop(0, '#6e6450')
+   710→    river.addColorStop(1, '#4a4438')
+   711→    ctx.fillStyle = river
+   712→    ctx.fill()
+   713→    ctx.restore()
+   714→    // Reflejos del río
+   715→    ctx.save()
+   716→    ctx.globalAlpha = 0.15
+   717→    ctx.fillStyle = '#c8b890'
+   718→    for (let i = 0; i < 6; i++) {
+   719→      const y = h * 0.44 + i * 4
+   720→      ctx.fillRect(0, y, w, 1.5)
+   721→    }
+   722→    ctx.restore()
+   723→
+   724→    // Suelo: izquierda = ribera pedregosa, derecha = área de campamento
+   725→    const ground = ctx.createLinearGradient(0, h * 0.55, 0, h)
+   726→    ground.addColorStop(0, PALETTE.tierra)
+   727→    ground.addColorStop(1, PALETTE.tierraOscura)
+   728→    ctx.fillStyle = ground
+   729→    ctx.fillRect(0, h * 0.55, w, h * 0.45)
+   730→
+   731→    // Área de campamento a la derecha (suelo más plano/apisonado)
+   732→    ctx.save()
+   733→    ctx.globalAlpha = 0.4
+   734→    rect(ctx, w * 0.55, h * 0.6, w * 0.45, h * 0.4, PALETTE.tierraClara)
+   735→    ctx.restore()
+   736→
+   737→    // Piedras dispersas (algunas en ribera izq, algunas en camp der)
+   738→    ctx.save()
+   739→    ctx.fillStyle = PALETTE.piedraOscura
+   740→    const stones: Array<[number, number, number]> = [
+   741→      [80, 540, 12], [180, 590, 16], [260, 560, 10], [380, 600, 14],
+   742→      [470, 580, 11], [640, 660, 18], [780, 640, 14], [890, 670, 20],
+   743→      [1020, 650, 12], [1150, 680, 16], [1230, 660, 10],
+   744→      [120, 690, 22], [340, 680, 18], [560, 700, 20], [740, 690, 16],
+   745→      [940, 705, 19], [1180, 700, 15],
+   746→    ]
+   747→    for (const [x, y, r] of stones) {
+   748→      ctx.beginPath()
+   749→      ctx.ellipse(x, y, r, r * 0.7, 0, 0, Math.PI * 2)
+   750→      ctx.fill()
+   751→    }
+   752→    ctx.restore()
+   753→
+   754→    // Viñeta cálida
+   755→    const vig = ctx.createRadialGradient(w / 2, h / 2, 240, w / 2, h / 2, 720)
+   756→    vig.addColorStop(0, 'rgba(0,0,0,0)')
+   757→    vig.addColorStop(1, 'rgba(60,35,15,0.32)')
+   758→    ctx.fillStyle = vig
+   759→    ctx.fillRect(0, 0, w, h)
+   760→  },
+   761→}
+   762→
+   763→/* ────────────────────── Escena 02: Gaucho durmiendo ────────────────────── */
+   764→
+   765→/**
+   766→ * gaucho_sleeping: Gaucho recostado contra un cardón, durmiendo.
+   767→ * Silueta oscura (poncho + sombrero sobre la cara). Pose relajada.
+   768→ * Sin rostro visible. ~120x140.
+   769→ */
+   770→const gauchoSleeping: DrawerDef = {
+   771→  w: 120, h: 140,
+   772→  draw(ctx: C, w: number, h: number): void {
+   773→    const cx = w / 2
+   774→    // Sombra en el suelo
+   775→    ctx.save()
+   776→    ctx.globalAlpha = 0.3
+   777→    ctx.beginPath()
+   778→    ctx.ellipse(cx, h - 6, w * 0.42, 6, 0, 0, Math.PI * 2)
+   779→    ctx.fillStyle = '#000'
+   780→    ctx.fill()
+   781→    ctx.restore()
+   782→
+   783→    // Cardón de respaldo (columna vertical verde-agostado, a la derecha)
+   784→    rect(ctx, w - 26, h * 0.1, 16, h * 0.85, PALETTE.verdeOscuro)
+   785→    ctx.save()
+   786→    ctx.globalAlpha = 0.4
+   787→    rect(ctx, w - 24, h * 0.1, 4, h * 0.85, PALETTE.verdeAgostado)
+   788→    ctx.restore()
+   789→
+   790→    // Piernas extendidas (rectángulos marrones, relajados)
+   791→    rect(ctx, cx - 18, h * 0.62, 14, h * 0.28, PALETTE.sombrero)
+   792→    rect(ctx, cx - 4, h * 0.65, 14, h * 0.25, PALETTE.sombrero)
+   793→    // Botitas
+   794→    rect(ctx, cx - 22, h * 0.88, 16, 8, PALETTE.sombreroAla)
+   795→    rect(ctx, cx - 8, h * 0.88, 16, 8, PALETTE.sombreroAla)
+   796→
+   797→    // Cuerpo recostado (óvalo horizontal de poncho)
+   798→    ctx.beginPath()
+   799→    ctx.ellipse(cx - 8, h * 0.55, w * 0.3, h * 0.22, 0, 0, Math.PI * 2)
+   800→    ctx.fillStyle = PALETTE.poncho
+   801→    ctx.fill()
+   802→    // Sombra del poncho
+   803→    ctx.beginPath()
+   804→    ctx.ellipse(cx + 6, h * 0.55, w * 0.22, h * 0.18, 0, 0, Math.PI * 2)
+   805→    ctx.fillStyle = PALETTE.ponchoOscuro
+   806→    ctx.fill()
+   807→
+   808→    // Cabeza inclinada hacia adelante (sin rostro visible)
+   809→    circle(ctx, cx - 28, h * 0.42, 14, PALETTE.sombrero)
+   810→    // Sombrero cayendo sobre la cara (ala ancha cubre cabeza)
+   811→    ctx.beginPath()
+   812→    ctx.ellipse(cx - 28, h * 0.38, 26, 7, 0.15, 0, Math.PI * 2)
+   813→    ctx.fillStyle = PALETTE.sombreroAla
+   814→    ctx.fill()
+   815→    rect(ctx, cx - 40, h * 0.28, 22, 12, PALETTE.sombrero)
+   816→
+   817→    // Brazo relajado sobre el regazo (línea fina marrón)
+   818→    ctx.save()
+   819→    ctx.strokeStyle = PALETTE.sombrero
+   820→    ctx.lineWidth = 6
+   821→    ctx.lineCap = 'round'
+   822→    ctx.beginPath()
+   823→    ctx.moveTo(cx - 12, h * 0.5)
+   824→    ctx.lineTo(cx + 14, h * 0.62)
+   825→    ctx.stroke()
+   826→    ctx.restore()
+   827→  },
+   828→}
+   829→
+   830→/**
+   831→ * gaucho_awake: Mismo gaucho del campamento, pero despierto — sentado
+   832→ * erguido contra el cardón, alerta/hablando. Torso vertical (poncho),
+   833→ * sombrero empujado atrás para dejar el rostro visible: ojos (puntos) y
+   834→ * boca abierta. Un brazo gesticula. ~120x140.
+   835→ */
+   836→const gauchoAwake: DrawerDef = {
+   837→  w: 120, h: 140,
+   838→  draw(ctx: C, w: number, h: number): void {
+   839→    const cx = w / 2
+   840→    // Sombra en el suelo
+   841→    ctx.save()
+   842→    ctx.globalAlpha = 0.3
+   843→    ctx.beginPath()
+   844→    ctx.ellipse(cx, h - 6, w * 0.42, 6, 0, 0, Math.PI * 2)
+   845→    ctx.fillStyle = '#000'
+   846→    ctx.fill()
+   847→    ctx.restore()
+   848→
+   849→    // Cardón de respaldo (columna vertical verde-agostado, a la derecha)
+   850→    rect(ctx, w - 26, h * 0.1, 16, h * 0.85, PALETTE.verdeOscuro)
+   851→    ctx.save()
+   852→    ctx.globalAlpha = 0.4
+   853→    rect(ctx, w - 24, h * 0.1, 4, h * 0.85, PALETTE.verdeAgostado)
+   854→    ctx.restore()
+   855→
+   856→    // Piernas extendidas hacia adelante (sentado, piernas al frente)
+   857→    rect(ctx, cx - 22, h * 0.6, 14, h * 0.28, PALETTE.sombrero)
+   858→    rect(ctx, cx - 6, h * 0.6, 14, h * 0.28, PALETTE.sombrero)
+   859→    // Botitas
+   860→    rect(ctx, cx - 26, h * 0.86, 16, 8, PALETTE.sombreroAla)
+   861→    rect(ctx, cx - 10, h * 0.86, 16, 8, PALETTE.sombreroAla)
+   862→
+   863→    // Torso erguido (poncho trapecio terracota — más ancho abajo)
+   864→    poly(ctx, [
+   865→      [cx - 16, h * 0.3], [cx + 16, h * 0.3],
+   866→      [cx + 24, h * 0.62], [cx - 24, h * 0.62],
+   867→    ], PALETTE.poncho)
+   868→    // Sombra del poncho (lado izq)
+   869→    poly(ctx, [
+   870→      [cx - 16, h * 0.3], [cx - 8, h * 0.3],
+   871→      [cx - 12, h * 0.62], [cx - 24, h * 0.62],
+   872→    ], PALETTE.ponchoOscuro)
+   873→
+   874→    // Cabeza erguida (rostro visible — tono tierra cálida)
+   875→    circle(ctx, cx, h * 0.22, 13, PALETTE.tierraOscura)
+   876→
+   877→    // Sombrero de ala ancha empujado atrás (no cubre el rostro)
+   878→    ctx.beginPath()
+   879→    ctx.ellipse(cx, h * 0.13, 30, 7, 0, 0, Math.PI * 2)
+   880→    ctx.fillStyle = PALETTE.sombreroAla
+   881→    ctx.fill()
+   882→    rect(ctx, cx - 12, h * 0.0, 24, 14, PALETTE.sombrero)
+   883→    ctx.beginPath()
+   884→    ctx.arc(cx, 0, 12, Math.PI, 0)
+   885→    ctx.fillStyle = PALETTE.sombrero
+   886→    ctx.fill()
+   887→
+   888→    // Ojos (puntos pequeños visibles bajo el ala)
+   889→    circle(ctx, cx - 5, h * 0.22, 1.8, PALETTE.sombreroAla)
+   890→    circle(ctx, cx + 5, h * 0.22, 1.8, PALETTE.sombreroAla)
+   891→
+   892→    // Boca abierta (hablando — pequeña elipse oscura)
+   893→    ctx.beginPath()
+   894→    ctx.ellipse(cx, h * 0.27, 4, 3, 0, 0, Math.PI * 2)
+   895→    ctx.fillStyle = PALETTE.sombreroAla
+   896→    ctx.fill()
+   897→
+   898→    // Brazo izquierdo levantado (gesticulando al hablar)
+   899→    ctx.save()
+   900→    ctx.strokeStyle = PALETTE.sombrero
+   901→    ctx.lineWidth = 6
+   902→    ctx.lineCap = 'round'
+   903→    ctx.beginPath()
+   904→    ctx.moveTo(cx - 14, h * 0.34)
+   905→    ctx.lineTo(cx - 32, h * 0.23)
+   906→    ctx.stroke()
+   907→    ctx.restore()
+   908→    // Mano al final del brazo
+   909→    circle(ctx, cx - 32, h * 0.23, 4, PALETTE.sombrero)
+   910→  },
+   911→}
+   912→
+   913→/* ────────────────────── Escena 02: Cardón (cactus NOA) ────────────────────── */
+   914→
+   915→/**
+   916→ * cardon: Cactus columnar del NOA (Trichocereus pasacana).
+   917→ * Columna alta verde-grisácea con 2-3 brazos, textura acanalada (líneas
+   918→ * verticales). Sin espinas detalladas. ~80x200.
+   919→ */
+   920→const cardon: DrawerDef = {
+   921→  w: 80, h: 200,
+   922→  draw(ctx: C, w: number, h: number): void {
+   923→    const cx = w / 2
+   924→    // Sombra en el suelo
+   925→    ctx.save()
+   926→    ctx.globalAlpha = 0.3
+   927→    ctx.beginPath()
+   928→    ctx.ellipse(cx, h - 4, w * 0.42, 5, 0, 0, Math.PI * 2)
+   929→    ctx.fillStyle = '#000'
+   930→    ctx.fill()
+   931→    ctx.restore()
+   932→
+   933→    // Cuerpo principal (columna con ápice redondeado)
+   934→    ctx.save()
+   935→    ctx.fillStyle = PALETTE.verdeAgostado
+   936→    // Trapecio sutil (más ancho abajo)
+   937→    ctx.beginPath()
+   938→    ctx.moveTo(cx - 14, h - 6)
+   939→    ctx.lineTo(cx - 12, 24)
+   940→    ctx.quadraticCurveTo(cx, 8, cx + 12, 24)
+   941→    ctx.lineTo(cx + 14, h - 6)
+   942→    ctx.closePath()
+   943→    ctx.fill()
+   944→    ctx.restore()
+   945→
+   946→    // Brazo izquierdo (más corto)
+   947→    ctx.save()
+   948→    ctx.fillStyle = PALETTE.verdeAgostado
+   949→    ctx.beginPath()
+   950→    ctx.moveTo(cx - 14, h * 0.55)
+   951→    ctx.lineTo(cx - 30, h * 0.55)
+   952→    ctx.quadraticCurveTo(cx - 38, h * 0.55, cx - 38, h * 0.45)
+   953→    ctx.lineTo(cx - 30, h * 0.45)
+   954→    ctx.quadraticCurveTo(cx - 22, h * 0.45, cx - 22, h * 0.62)
+   955→    ctx.lineTo(cx - 14, h * 0.62)
+   956→    ctx.closePath()
+   957→    ctx.fill()
+   958→    ctx.restore()
+   959→    // Ápice del brazo izq
+   960→    ctx.beginPath()
+   961→    ctx.ellipse(cx - 30, h * 0.5, 8, 6, 0, 0, Math.PI * 2)
+   962→    ctx.fillStyle = PALETTE.verdeAgostado
+   963→    ctx.fill()
+   964→
+   965→    // Brazo derecho (más alto)
+   966→    ctx.save()
+   967→    ctx.fillStyle = PALETTE.verdeAgostado
+   968→    ctx.beginPath()
+   969→    ctx.moveTo(cx + 14, h * 0.4)
+   970→    ctx.lineTo(cx + 28, h * 0.4)
+   971→    ctx.quadraticCurveTo(cx + 36, h * 0.4, cx + 36, h * 0.28)
+   972→    ctx.lineTo(cx + 28, h * 0.28)
+   973→    ctx.quadraticCurveTo(cx + 22, h * 0.28, cx + 22, h * 0.48)
+   974→    ctx.lineTo(cx + 14, h * 0.48)
+   975→    ctx.closePath()
+   976→    ctx.fill()
+   977→    ctx.restore()
+   978→    ctx.beginPath()
+   979→    ctx.ellipse(cx + 28, h * 0.34, 8, 6, 0, 0, Math.PI * 2)
+   980→    ctx.fillStyle = PALETTE.verdeAgostado
+   981→    ctx.fill()
+   982→
+   983→    // Costillas/acanaladuras (líneas verticales oscuras)
+   984→    ctx.save()
+   985→    ctx.strokeStyle = PALETTE.verdeOscuro
+   986→    ctx.lineWidth = 1.5
+   987→    // Columna principal
+   988→    for (const dx of [-6, 0, 6]) {
+   989→      ctx.beginPath()
+   990→      ctx.moveTo(cx + dx, 30)
+   991→      ctx.lineTo(cx + dx, h - 8)
+   992→      ctx.stroke()
+   993→    }
+   994→    // Brazo izq
+   995→    ctx.beginPath()
+   996→    ctx.moveTo(cx - 22, h * 0.5)
+   997→    ctx.lineTo(cx - 36, h * 0.5)
+   998→    ctx.stroke()
+   999→    // Brazo der
+  1000→    ctx.beginPath()
+  1001→    ctx.moveTo(cx + 22, h * 0.34)
+  1002→    ctx.lineTo(cx + 34, h * 0.34)
+  1003→    ctx.stroke()
+  1004→    ctx.restore()
+  1005→
+  1006→    // Sombra lateral derecha (volumen)
+  1007→    ctx.save()
+  1008→    ctx.globalAlpha = 0.25
+  1009→    rect(ctx, cx + 6, 24, 8, h - 30, PALETTE.verdeOscuro)
+  1010→    ctx.restore()
+  1011→  },
+  1012→}
+  1013→
+  1014→/* ────────────────────── Escena 02: Pava (kettle) ────────────────────── */
+  1015→
+  1016→/**
+  1017→ * kettle: Pava de hierro/metal con pico y asa. Gris metálico oscuro.
+  1018→ * ~50x60.
+  1019→ */
+  1020→const kettle: DrawerDef = {
+  1021→  w: 50, h: 60,
+  1022→  draw(ctx: C, w: number, h: number): void {
+  1023→    const cx = w / 2
+  1024→    // Sombra en el suelo
+  1025→    ctx.save()
+  1026→    ctx.globalAlpha = 0.3
+  1027→    ctx.beginPath()
+  1028→    ctx.ellipse(cx, h - 4, w * 0.38, 4, 0, 0, Math.PI * 2)
+  1029→    ctx.fillStyle = '#000'
+  1030→    ctx.fill()
+  1031→    ctx.restore()
+  1032→
+  1033→    // Cuerpo (óvalo vertical metálico)
+  1034→    ctx.beginPath()
+  1035→    ctx.ellipse(cx, h * 0.6, w * 0.32, h * 0.3, 0, 0, Math.PI * 2)
+  1036→    ctx.fillStyle = PALETTE.piedraOscura
+  1037→    ctx.fill()
+  1038→
+  1039→    // Sombra volumétrica (lado derecho)
+  1040→    ctx.save()
+  1041→    ctx.globalAlpha = 0.4
+  1042→    ctx.beginPath()
+  1043→    ctx.ellipse(cx + w * 0.12, h * 0.6, w * 0.2, h * 0.28, 0, 0, Math.PI * 2)
+  1044→    ctx.fillStyle = '#3a4040'
+  1045→    ctx.fill()
+  1046→    ctx.restore()
+  1047→
+  1048→    // Highlight (brillo metálico lado izq)
+  1049→    ctx.save()
+  1050→    ctx.globalAlpha = 0.5
+  1051→    ctx.beginPath()
+  1052→    ctx.ellipse(cx - w * 0.14, h * 0.55, w * 0.06, h * 0.18, 0, 0, Math.PI * 2)
+  1053→    ctx.fillStyle = '#b8bcbc'
+  1054→    ctx.fill()
+  1055→    ctx.restore()
+  1056→
+  1057→    // Pico (triangular, arriba-derecha)
+  1058→    poly(ctx, [
+  1059→      [cx + w * 0.22, h * 0.5],
+  1060→      [cx + w * 0.46, h * 0.36],
+  1061→      [cx + w * 0.24, h * 0.58],
+  1062→    ], PALETTE.piedraOscura)
+  1063→
+  1064→    // Asa (arco arriba-izquierda)
+  1065→    ctx.save()
+  1066→    ctx.strokeStyle = PALETTE.piedraOscura
+  1067→    ctx.lineWidth = 4
+  1068→    ctx.beginPath()
+  1069→    ctx.arc(cx - w * 0.2, h * 0.45, 8, Math.PI * 0.9, Math.PI * 2.1)
+  1070→    ctx.stroke()
+  1071→    ctx.restore()
+  1072→
+  1073→    // Tapa (rect pequeño arriba)
+  1074→    rect(ctx, cx - 6, h * 0.28, 12, 6, PALETTE.piedraOscura)
+  1075→    // Pomo de la tapa
+  1076→    circle(ctx, cx, h * 0.26, 3, PALETTE.sombreroAla)
+  1077→
+  1078→    // Base (anillo de apoyo)
+  1079→    ctx.save()
+  1080→    ctx.globalAlpha = 0.6
+  1081→    ctx.beginPath()
+  1082→    ctx.ellipse(cx, h * 0.86, w * 0.3, 4, 0, 0, Math.PI * 2)
+  1083→    ctx.fillStyle = '#2a3030'
+  1084→    ctx.fill()
+  1085→    ctx.restore()
+  1086→  },
+  1087→}
+  1088→
+  1089→/* ────────────────────── Escena 02: Pila de leña vieja ────────────────────── */
+  1090→
+  1091→/**
+  1092→ * wood_pile: Pila de tablones viejos descartados. 3-4 tablones marrones
+  1093→ * en ángulos irregulares, superpuestos. ~80x50.
+  1094→ */
+  1095→const woodPile: DrawerDef = {
+  1096→  w: 80, h: 50,
+  1097→  draw(ctx: C, w: number, h: number): void {
+  1098→    const cx = w / 2
+  1099→    // Sombra en el suelo
+  1100→    ctx.save()
+  1101→    ctx.globalAlpha = 0.3
+  1102→    ctx.beginPath()
+  1103→    ctx.ellipse(cx, h - 4, w * 0.45, 5, 0, 0, Math.PI * 2)
+  1104→    ctx.fillStyle = '#000'
+  1105→    ctx.fill()
+  1106→    ctx.restore()
+  1107→
+  1108→    // Tablón 1 (inclinado izq)
+  1109→    ctx.save()
+  1110→    ctx.translate(cx - 10, h * 0.55)
+  1111→    ctx.rotate(-0.25)
+  1112→    rect(ctx, -28, -5, 56, 10, PALETTE.sombrero)
+  1113→    // Veta
+  1114→    ctx.save()
+  1115→    ctx.globalAlpha = 0.4
+  1116→    rect(ctx, -26, -3, 52, 1.5, PALETTE.sombreroAla)
+  1117→    ctx.restore()
+  1118→    ctx.restore()
+  1119→
+  1120→    // Tablón 2 (casi horizontal, abajo)
+  1121→    ctx.save()
+  1122→    ctx.translate(cx + 6, h * 0.75)
+  1123→    ctx.rotate(0.08)
+  1124→    rect(ctx, -32, -5, 64, 10, PALETTE.ponchoOscuro)
+  1125→    ctx.save()
+  1126→    ctx.globalAlpha = 0.4
+  1127→    rect(ctx, -30, -2, 60, 1.5, PALETTE.sombreroAla)
+  1128→    ctx.restore()
+  1129→    ctx.restore()
+  1130→
+  1131→    // Tablón 3 (inclinado der, cruzando)
+  1132→    ctx.save()
+  1133→    ctx.translate(cx + 12, h * 0.5)
+  1134→    ctx.rotate(0.32)
+  1135→    rect(ctx, -24, -4, 48, 8, PALETTE.sombrero)
+  1136→    ctx.save()
+  1137→    ctx.globalAlpha = 0.5
+  1138→    rect(ctx, -22, -2, 44, 1, PALETTE.sombreroAla)
+  1139→    ctx.restore()
+  1140→    ctx.restore()
+  1141→
+  1142→    // Tablón 4 (vertical corto, atrás)
+  1143→    ctx.save()
+  1144→    ctx.translate(cx - 22, h * 0.45)
+  1145→    ctx.rotate(-0.6)
+  1146→    rect(ctx, -16, -4, 32, 8, PALETTE.sombreroAla)
+  1147→    ctx.restore()
+  1148→
+  1149→    // Extremos rotos (astillas — pequeños triángulos)
+  1150→    poly(ctx, [
+  1151→      [cx + 28, h * 0.78], [cx + 34, h * 0.72], [cx + 32, h * 0.82],
+  1152→    ], PALETTE.sombreroAla)
+  1153→  },
+  1154→}
+  1155→
+  1156→/* ────────────────────── Escena 02: Cenizas en fogata ────────────────────── */
+  1157→
+  1158→/**
+  1159→ * firepit_ashes: Cenizas en una fogata apagada. Círculo de piedras alrededor
+  1160→ * con ceniza gris en el centro y algunas piedras pequeñas oscuras en el borde.
+  1161→ * ~70x40.
+  1162→ */
+  1163→const firepitAshes: DrawerDef = {
+  1164→  w: 70, h: 40,
+  1165→  draw(ctx: C, w: number, h: number): void {
+  1166→    const cx = w / 2
+  1167→    const cy = h * 0.6
+  1168→
+  1169→    // Sombra en el suelo
+  1170→    ctx.save()
+  1171→    ctx.globalAlpha = 0.25
+  1172→    ctx.beginPath()
+  1173→    ctx.ellipse(cx, h - 2, w * 0.45, 4, 0, 0, Math.PI * 2)
+  1174→    ctx.fillStyle = '#000'
+  1175→    ctx.fill()
+  1176→    ctx.restore()
+  1177→
+  1178→    // Anillo de piedras alrededor (8 piedras formando círculo)
+  1179→    const ringR = w * 0.36
+  1180→    const ringStones = 9
+  1181→    for (let i = 0; i < ringStones; i++) {
+  1182→      const a = (i / ringStones) * Math.PI * 2
+  1183→      const sx = cx + Math.cos(a) * ringR
+  1184→      const sy = cy + Math.sin(a) * ringR * 0.45 // achatado (perspectiva)
+  1185→      // Variación de tamaño
+  1186→      const r = 5 + (i % 3)
+  1187→      ctx.beginPath()
+  1188→      ctx.ellipse(sx, sy, r, r * 0.75, 0, 0, Math.PI * 2)
+  1189→      ctx.fillStyle = i % 2 === 0 ? PALETTE.piedra : PALETTE.piedraOscura
+  1190→      ctx.fill()
+  1191→    }
+  1192→
+  1193→    // Ceniza central (óvalo gris claro)
+  1194→    ctx.beginPath()
+  1195→    ctx.ellipse(cx, cy, w * 0.24, h * 0.22, 0, 0, Math.PI * 2)
+  1196→    ctx.fillStyle = '#b0a89a'
+  1197→    ctx.fill()
+  1198→
+  1199→    // Ceniza más oscura (núcleo)
+  1200→    ctx.save()
+  1201→    ctx.globalAlpha = 0.5
+  1202→    ctx.beginPath()
+  1203→    ctx.ellipse(cx, cy, w * 0.14, h * 0.13, 0, 0, Math.PI * 2)
+  1204→    ctx.fillStyle = '#6a6258'
+  1205→    ctx.fill()
+  1206→    ctx.restore()
+  1207→
+  1208→    // Carbones pequeños oscuros dentro de la ceniza
+  1209→    const embers: Array<[number, number, number]> = [
+  1210→      [cx - 6, cy - 2, 2], [cx + 5, cy + 1, 2.5], [cx - 2, cy + 4, 1.8],
+  1211→      [cx + 8, cy - 3, 1.5], [cx - 9, cy + 3, 2],
+  1212→    ]
+  1213→    for (const [x, y, r] of embers) {
+  1214→      circle(ctx, x, y, r, PALETTE.sombreroAla)
+  1215→    }
+  1216→
+  1217→    // Algunas piedras sueltas alrededor del borde (extra)
+  1218→    const loose: Array<[number, number, number]> = [
+  1219→      [cx - w * 0.42, cy + 3, 3], [cx + w * 0.4, cy - 1, 2.5],
+  1220→      [cx - w * 0.3, cy + 8, 2], [cx + w * 0.28, cy + 7, 3],
+  1221→    ]
+  1222→    for (const [x, y, r] of loose) {
+  1223→      circle(ctx, x, y, r, PALETTE.piedraOscura)
+  1224→    }
+  1225→  },
+  1226→}
+  1227→
+  1228→/* ────────────────────── Registro ────────────────────── */
+  1229→
+  1230→export const DRAWERS: Record<string, DrawerDef> = {
+  1231→  acay_back: acayBack,
+  1232→  acay_unconscious: acayUnconscious,
+  1233→  acay_stand_front: acayStandFront,
+  1234→  antagonist_ucumar: antagonistUcumar,
+  1235→  antagonist_shadow: antagonistShadow,
+  1236→  explore_background: exploreBackground,
+  1237→  rhythm_track: rhythmTrack,
+  1238→  narrative_rock: narrativeRock,
+  1239→  narrative_tree: narrativeTree,
+  1240→  narrative_ruin: narrativeRuin,
+  1241→  narrative_coquena: narrativeCoquena,
+  1242→  title_logo: titleLogo,
+  1243→  narrative_guitar: narrativeGuitar,
+  1244→  narrative_relic: narrativeRelic,
+  1245→  rocks_in_river: rocksInRiver,
+  1246→  campamento_background: campamentoBackground,
+  1247→  gaucho_sleeping: gauchoSleeping,
+  1248→  gaucho_awake: gauchoAwake,
+  1249→  cardon: cardon,
+  1250→  kettle: kettle,
+  1251→  wood_pile: woodPile,
+  1252→  firepit_ashes: firepitAshes,
+  1253→}
+  1254→

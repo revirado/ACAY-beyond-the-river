@@ -160,5 +160,39 @@ export function buildDialogueTriggers(): DialogueTrigger[] {
     ],
   }
 
-  return [pachaGreeting, voiceUnknown]
+  /**
+   * 3.2: Tras el tutorial coop (tutorialComplete), el gaucho advierte a Acay
+   * sobre lo que hay adentro y revela su naturaleza (transformación → batalla).
+   * OnDialogueEnd → transición a battle turn-based con el Duende.
+   */
+  const gauchoWarning: DialogueTrigger = {
+    id: 'gaucho_warning',
+    condition: { type: 'onFlag', flag: 'tutorialComplete' },
+    once: true,
+    delaySec: 1.0,
+    speaker: t('scene02.gaucho_speaker'),
+    phase: 'conversation',
+    dialogue: [
+      { speaker: t('scene02.gaucho_speaker'), text: t('scene02.gaucho_warning') },
+      { speaker: 'Duende', text: t('scene02.duende_intro') },
+    ],
+  }
+
+  /**
+   * 3.3: Tras derrotar al Duende (questGauchoCompleted), recupera su compostura
+   * y entrega la Vara de Hierro.
+   */
+  const gauchoReward: DialogueTrigger = {
+    id: 'gaucho_reward',
+    condition: { type: 'onFlag', flag: 'questGauchoCompleted' },
+    once: true,
+    delaySec: 1.0,
+    speaker: 'Duende',
+    phase: 'conversation',
+    dialogue: [
+      { speaker: 'Duende', text: t('scene02.duende_reward') },
+    ],
+  }
+
+  return [pachaGreeting, voiceUnknown, gauchoWarning, gauchoReward]
 }

@@ -69,10 +69,18 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
   enter(ctx: ScreenContext<AcayGameState>): void {
     this.loadScene(ctx, ctx.state.currentScene)
     this.acayState = ctx.state.flags.acayAwakened ? 'awake' : 'unconscious'
-    this.fadeAlpha = 1
-    this.fadeDir = 'in'
+    // Si el título no se mostró aún, la TitleOverlay maneja el fade visual.
+    // El ExploreScreen no hace fade-in (fadeAlpha=0) para que la escena se vea
+    // debajo del overlay desde el principio.
+    if (ctx.state.flags.titleShown) {
+      this.fadeAlpha = 1
+      this.fadeDir = 'in'
+      this.enterMs = performance.now()
+    } else {
+      this.fadeAlpha = 0
+      this.fadeDir = null
+    }
     this.pendingScene = null
-    this.enterMs = performance.now()
     ctx.syncUI()
   }
 
@@ -110,6 +118,14 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
   update(dt: number, ctx: ScreenContext<AcayGameState>): void {
     const st = ctx.state
     const input = ctx.input
+
+    // ── Si el título está activo (!titleShown), deshabilitar interacción ──
+    // El jugador no puede hacer hover/click hasta que la TitleOverlay termine.
+    if (!st.flags.titleShown) {
+      // Consumar clicks para que no se acumulen durante el título
+      input.consumeClick()
+      return
+    }
 
     // ── Detectar cambio de idioma → reconstruir ──
     const curLocale = getLocale()
@@ -178,8 +194,8 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
       return // mientras camina, no procesar hover/clic
     }
 
-    // ── Triggers (solo en river_shore, solo tras despertar) ──
-    if (this.acayState === 'awake' && this._sceneId === 'river_shore' && this.fadeAlpha <= 0) {
+    // ── Triggers (en cualquier escena, solo tras despertar) ──
+    if (this.acayState === 'awake' && this.fadeAlpha <= 0) {
       const trigger = evaluateTriggers(this.triggers, this.triggerEval, {
         currentSceneId: this.id,
         inventoryCount: st.inventory.length,
@@ -192,6 +208,7 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
         st.dialogueIndex = 0
         st.dialoguePhase = trigger.phase
         if (trigger.once) st.flags[`trigger:${trigger.id}`] = true
+        this._dialogueOwner = `trigger:${trigger.id}`
         ctx.syncUI()
         return
       }
@@ -205,6 +222,8 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
         if (el.id === 'acay') continue // Acay no es hoverable post-despertar
         // Ocultar elementos con hideFlag activo (ej. pickup ya recogido)
         if (el.hideFlag && st.flags[el.hideFlag]) continue
+        // Mostrar elementos que aparecen solo tras un flag (ej. unstable_rock)
+        if (el.appearsAfterFlag && !st.flags[el.appearsAfterFlag]) continue
         const scale = el.scale ?? 1
         const hw = (el.hitW ?? 80) * scale
         const hh = (el.hitH ?? 100) * scale
@@ -260,6 +279,19 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
           if (this._dialogueOwner === 'gaucho' && !st.flags.gauchoDialogueDone) {
             st.flags.gauchoDialogueDone = true
           }
+          // 3.1: tras cerrar diálogo del gaucho_stop → transición a tutorial coop
+          if (this._dialogueOwner === 'gaucho_stop' && !st.flags.tutorialComplete) {
+            ctx.screens.requestSwitch('rhythm-battle', { mode: 'tutorial', antagonistId: 'gaucho' }, CONFIG.fade.normal)
+          }
+          // 3.2: tras cerrar diálogo del gaucho_warning → transición a battle turn-based
+          if (this._dialogueOwner === 'trigger:gaucho_warning' && !st.flags.questGauchoCompleted) {
+            ctx.screens.requestSwitch('rhythm-battle', { mode: 'dodge', antagonistId: 'duende', turnBased: true }, CONFIG.fade.normal)
+          }
+          // 4.2: tras cerrar diálogo del cruce → fin de demo
+          if (this._dialogueOwner === 'crossing') {
+            st.flags.demoEnded = true
+            ctx.syncUI()
+          }
           this._dialogueOwner = null
           ctx.syncUI()
         }
@@ -299,24 +331,77 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
   private interactElement(ctx: ScreenContext<AcayGameState>, el: NarrativeElement): void {
     const st = ctx.state
 
-    // Exit hotspot
-    if (el.isExit) {
-      if (el.exitTargetScene && el.exitTargetScene.length > 0) {
-        // Salida con destino → transición de escena
-        this.pendingScene = el.exitTargetScene
-        this.fadeDir = 'out'
-      } else if (el.id === 'right_exit' && this._sceneId === 'campamento') {
-        // Salida derecha en campamento → interceptada por gaucho (prep Escena 03)
-        const g = t('scene02.gaucho_speaker')
+    // ── 4.1: Use-item mechanic ── Si hay un item seleccionado, intentar usarlo
+    if (st.selectedItemId) {
+      if (el.useItem && el.useItem === st.selectedItemId) {
+        // Éxito: usar el item
+        if (el.useItemFlag) st.flags[el.useItemFlag] = true
+        st.removeItem(st.selectedItemId)
         st.currentDialogue = [
-          { speaker: g, text: t('scene02.gaucho_stop_1') },
-          { speaker: t('scene01.acay_label'), text: '…', isAcay: true },
-          { speaker: g, text: t('scene02.gaucho_stop_3') },
+          { speaker: t('scene01.acay_label'), text: el.useItemText || '...', isAcay: true },
         ]
         st.dialogueIndex = 0
         st.dialoguePhase = 'conversation'
+        st.selectedItemId = null
+        ctx.syncUI()
+        return
       } else {
-        // Salida izquierda en river_shore → bloqueada, diálogo según contador
+        // Item incorrecto
+        st.currentDialogue = [{ speaker: '', text: t('scene04.cant_use') }]
+        st.dialogueIndex = 0
+        st.dialoguePhase = 'narration'
+        st.selectedItemId = null
+        ctx.syncUI()
+        return
+      }
+    }
+
+    // ── 4.2: Cruce del puente → fin de demo ──
+    if (el.id === 'wood_bridge') {
+      st.currentDialogue = [
+        { speaker: t('scene01.acay_label'), text: t('scene04.cross_line'), isAcay: true },
+      ]
+      st.dialogueIndex = 0
+      st.dialoguePhase = 'conversation'
+      this._dialogueOwner = 'crossing'
+      ctx.syncUI()
+      return
+    }
+
+    // Exit hotspot — data-driven: evalúa conditions en orden (primera coincidencia).
+    // Si no hay conditions, usa el comportamiento fallback (exitTargetScene o contador).
+    if (el.isExit) {
+      if (el.conditions && el.conditions.length > 0) {
+        for (const cond of el.conditions) {
+          const flagOk = cond.flag ? !!st.flags[cond.flag] : true
+          const notFlagOk = cond.notFlag ? !st.flags[cond.notFlag] : true
+          if (flagOk && notFlagOk) {
+            // Condición coincide → ejecutar acción
+            if (cond.action === 'transition' && cond.targetScene) {
+              this.pendingScene = cond.targetScene
+              this.fadeDir = 'out'
+            } else if (cond.action === 'dialogue' && cond.dialogue) {
+              st.currentDialogue = cond.dialogue
+              st.dialogueIndex = 0
+              st.dialoguePhase = 'conversation'
+              this._dialogueOwner = cond.owner || null
+            } else if (cond.action === 'blocked') {
+              st.currentDialogue = [{ speaker: '', text: cond.blockedText || '...' }]
+              st.dialogueIndex = 0
+              st.dialoguePhase = 'narration'
+            }
+            ctx.syncUI()
+            return
+          }
+        }
+        // Ninguna condición coincidió → no hacer nada (no debería pasar si las conditions cubren todos los estados)
+        return
+      }
+      // Fallback para exits sin conditions (ej. left_exit river_shore: contador)
+      if (el.exitTargetScene && el.exitTargetScene.length > 0) {
+        this.pendingScene = el.exitTargetScene
+        this.fadeDir = 'out'
+      } else {
         st.leftExitAttempts++
         const n = st.leftExitAttempts
         const line = n === 1 ? t('scene01.left_exit_1') : n === 2 ? t('scene01.left_exit_2') : t('scene01.left_exit_3')
@@ -344,17 +429,34 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
     }
 
     // Gaucho (2.2): despierta + diálogo con pausas; al cerrar → unblock props
-    if (el.id === 'gaucho' && el.dialogue) {
+    // 60.3: diálogo condicional — si vuelve tras rocksPushed sin maderas → "¿Te olvidaste?"
+    if (el.id === 'gaucho') {
       st.flags.gauchoAwake = true
-      st.currentDialogue = el.dialogue
-      st.dialogueIndex = 0
-      st.dialoguePhase = 'conversation'
-      this._dialogueOwner = 'gaucho'
-      ctx.syncUI()
+      // Evaluar dialogueConditions (data-driven) antes del default
+      let dialogue = el.dialogue
+      let owner = 'gaucho'
+      if (el.dialogueConditions) {
+        for (const dc of el.dialogueConditions) {
+          const flagOk = dc.flag ? !!st.flags[dc.flag] : true
+          const notFlagOk = dc.notFlag ? !st.flags[dc.notFlag] : true
+          if (flagOk && notFlagOk) {
+            dialogue = dc.dialogue
+            owner = dc.owner || 'gaucho'
+            break
+          }
+        }
+      }
+      if (dialogue) {
+        st.currentDialogue = dialogue
+        st.dialogueIndex = 0
+        st.dialoguePhase = 'conversation'
+        this._dialogueOwner = owner
+        ctx.syncUI()
+      }
       return
     }
 
-    // Personaje con diálogo (genérico)
+    // Personaje con diálogo (genérico) — también con dialogueConditions
     if (el.isCharacter && el.dialogue) {
       st.currentDialogue = el.dialogue
       st.dialogueIndex = 0
@@ -484,6 +586,7 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
       for (const el of otherEls) {
         if (el.isExit) continue // exits no tienen sprite
         if (el.hideFlag && st.flags[el.hideFlag]) continue // oculto
+        if (el.appearsAfterFlag && !st.flags[el.appearsAfterFlag]) continue // no apareció aún
         drawables.push({ y: el.y, draw: () => this.drawElement(renderer, ctx, el) })
       }
       // Exit indicators (flechas sutiles)
@@ -605,7 +708,9 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
     const st = _ctx.state
     const isHovered = st.hoveredElementId === el.id
     const cx = el.x
-    const cy = el.y
+    // Triángulo visual: 20% hacia arriba del hitH (sin mover el área clickeable)
+    const visualOffset = (el.hitH ?? 400) * 0.2
+    const cy = el.y - visualOffset
     const dir = el.id === 'left_exit' ? -1 : 1
     const alpha = isHovered ? 0.8 : 0.3
     const bounce = isHovered ? Math.sin(_ctx.time * 4) * 4 : 0

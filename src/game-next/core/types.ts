@@ -73,6 +73,49 @@ export interface NarrativeElement {
   hideFlag?: string
   /** Asset alternativo cuando un flag es true (ej. gaucho despierto). */
   altAsset?: { flag: string; asset: string }
+  /** Item requerido para interactuar (use-item mechanic). Si null, interacción normal. */
+  useItem?: string
+  /** Diálogo al usar el item correctamente. */
+  useItemText?: string
+  /** Flag que se setea al usar el item (tracking de estado de escena). */
+  useItemFlag?: string
+  /** Si el elemento aparece solo después de que un flag es true (ej. unstable_rock). */
+  appearsAfterFlag?: string
+  /**
+   * Condiciones data-driven para exits (evaluadas en orden, primera coincidencia).
+   * Reemplaza la lógica hardcoded: el código consume condiciones, no ifs por escena.
+   * Editable en scene.ts (datos), no en ExploreScreen (código).
+   */
+  conditions?: ExitCondition[]
+  /**
+   * Diálogos condicionales (evaluados en orden antes del diálogo default).
+   * Permite que un personaje diga cosas distintas según el estado del juego.
+   * Ej: gaucho dice "¿Te olvidaste?" si el jugador vuelve sin las maderas.
+   */
+  dialogueConditions?: Array<{
+    flag?: string
+    notFlag?: string
+    dialogue: DialogueLine[]
+    owner?: string
+  }>
+}
+
+/** Condición para un exit hotspot (data-driven). */
+export interface ExitCondition {
+  /** Flag que debe ser true para que la condición coincida. */
+  flag?: string
+  /** Flag que debe ser false (no seteado) para que coincida. */
+  notFlag?: string
+  /** Acción a ejecutar cuando la condición coincide. */
+  action: 'transition' | 'dialogue' | 'blocked'
+  /** Para 'transition': escena destino. */
+  targetScene?: string
+  /** Para 'dialogue': líneas de diálogo. */
+  dialogue?: DialogueLine[]
+  /** Para 'blocked': texto a mostrar. */
+  blockedText?: string
+  /** Owner del diálogo (para follow-up actions como tutorial/battle). */
+  owner?: string
 }
 
 /** Escenas del juego Acay. */
@@ -115,7 +158,21 @@ export interface RhythmTab {
 
 /** Estado de una batalla rítmica en curso. */
 export interface RhythmBattleState {
-  /** Antagonista (para display). */
+  /** Modo: 'dodge' (esquivar tabs) o 'tutorial' (tocar notas, coop, sin daño). */
+  mode: 'dodge' | 'tutorial'
+  /** Si es batalla por turnos (player turn = tocar notas, enemy turn = esquivar). */
+  turnBased: boolean
+  /** Turno actual (solo turnBased): 'player' = Acay ataca, 'enemy' = Acay esquiva. */
+  turn: 'player' | 'enemy'
+  /** HP del enemigo/Duende (solo turnBased). -1 por nota tocada en player turn. */
+  enemyHp: number
+  /** HP máximo del enemigo. */
+  enemyMaxHp: number
+  /** Tabs totales del turno actual. */
+  turnTabsTotal: number
+  /** Tabs resueltos del turno actual. */
+  turnTabsResolved: number
+  /** Antagonista (para display). En tutorial es el gaucho. */
   antagonistId: string
   antagonistName: string
   /** Cantidad de lanes (eje horizontal). */
@@ -184,6 +241,12 @@ export interface AcaySnapshot extends BaseUISnapshot {
   inventoryUnlocked: boolean
   /** Objetivo actual (string i18n key resuelta) o null si no hay. */
   objective: string | null
+  /** Item seleccionado del inventario (para use-item mechanic). null = ninguno. */
+  selectedItemId: string | null
+  /** Si la demo terminó (pantalla de fin). */
+  demoEnded: boolean
+  /** Si el título ya se mostró (controla TitleOverlay). */
+  titleShown: boolean
 }
 
 /** WorldObjectDef del juego (interaction = NarrativeElement payload). */

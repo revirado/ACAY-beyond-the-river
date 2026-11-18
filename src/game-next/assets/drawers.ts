@@ -1225,6 +1225,149 @@ const firepitAshes: DrawerDef = {
   },
 }
 
+/* ────────────────────── Duende (NOA) ────────────────────── */
+
+const duende: DrawerDef = {
+  w: 100,
+  h: 160,
+  draw(ctx: C, w: number, h: number): void {
+    const cx = w / 2
+
+    // Sombra en los pies
+    ctx.save()
+    ctx.globalAlpha = 0.35
+    ctx.beginPath()
+    ctx.ellipse(cx, h - 4, w * 0.4, 6, 0, 0, Math.PI * 2)
+    ctx.fillStyle = '#000'
+    ctx.fill()
+    ctx.restore()
+
+    // Brazos abiertos en pose amenazante (detrás del cuerpo)
+    poly(ctx, [
+      [cx - 14, 80], [cx - 10, 92],
+      [cx - 42, 64], [cx - 46, 58],
+    ], PALETTE.antagonista)
+    poly(ctx, [
+      [cx + 14, 80], [cx + 10, 92],
+      [cx + 42, 64], [cx + 46, 58],
+    ], PALETTE.antagonista)
+    // Garras en las manos
+    circle(ctx, cx - 44, 60, 4, PALETTE.antagonistaBorde)
+    circle(ctx, cx + 44, 60, 4, PALETTE.antagonistaBorde)
+
+    // Cuerpo pequeño y oscuro (trapezoide)
+    poly(ctx, [
+      [cx - 14, 72], [cx + 14, 72],
+      [cx + 22, h - 12], [cx - 22, h - 12],
+    ], PALETTE.antagonista)
+    ctx.beginPath()
+    ctx.moveTo(cx - 14, 72)
+    ctx.lineTo(cx + 14, 72)
+    ctx.lineTo(cx + 22, h - 12)
+    ctx.lineTo(cx - 22, h - 12)
+    ctx.closePath()
+    ctx.strokeStyle = PALETTE.antagonistaBorde
+    ctx.lineWidth = 2
+    ctx.stroke()
+
+    // Cabeza grande
+    circle(ctx, cx, 46, 28, PALETTE.antagonista)
+    ctx.beginPath()
+    ctx.arc(cx, 46, 28, 0, Math.PI * 2)
+    ctx.strokeStyle = PALETTE.antagonistaBorde
+    ctx.lineWidth = 2
+    ctx.stroke()
+
+    // Orejas puntiagudas a los lados de la cabeza
+    poly(ctx, [[cx - 26, 42], [cx - 44, 16], [cx - 10, 34]], PALETTE.antagonista)
+    poly(ctx, [[cx + 26, 42], [cx + 44, 16], [cx + 10, 34]], PALETTE.antagonista)
+    ctx.beginPath()
+    ctx.moveTo(cx - 26, 42); ctx.lineTo(cx - 44, 16); ctx.lineTo(cx - 10, 34)
+    ctx.closePath()
+    ctx.strokeStyle = PALETTE.antagonistaBorde
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(cx + 26, 42); ctx.lineTo(cx + 44, 16); ctx.lineTo(cx + 10, 34)
+    ctx.closePath()
+    ctx.stroke()
+
+    // Sombrero cónico puntiagudo sobre la cabeza
+    poly(ctx, [[cx - 20, 24], [cx, 0], [cx + 20, 24]], PALETTE.antagonista)
+    ctx.beginPath()
+    ctx.moveTo(cx - 20, 24); ctx.lineTo(cx, 0); ctx.lineTo(cx + 20, 24)
+    ctx.closePath()
+    ctx.strokeStyle = PALETTE.antagonistaBorde
+    ctx.lineWidth = 2
+    ctx.stroke()
+
+    // Ojos rojos brillantes (halo + núcleo)
+    ctx.save()
+    ctx.globalAlpha = 0.45
+    circle(ctx, cx - 9, 48, 5, '#d9534f')
+    circle(ctx, cx + 9, 48, 5, '#d9534f')
+    ctx.restore()
+    circle(ctx, cx - 9, 48, 2.5, '#d9534f')
+    circle(ctx, cx + 9, 48, 2.5, '#d9534f')
+  },
+}
+
+/* ────────────────────── Roca inestable + puente (Escena 04) ────────────────────── */
+
+const unstableRock: DrawerDef = {
+  w: 140, h: 90,
+  draw(ctx: C, w: number, h: number): void {
+    const cx = w / 2
+    // Roca inclinada en el agua (inestable)
+    poly(ctx, [
+      [10, h - 6], [20, h * 0.3], [w * 0.35, 8],
+      [w * 0.65, 12], [w - 15, h * 0.4], [w - 10, h - 6],
+    ], PALETTE.piedra)
+    // Sombra
+    poly(ctx, [
+      [10, h - 6], [20, h * 0.3], [w * 0.4, h * 0.45], [w * 0.5, h - 6],
+    ], PALETTE.piedraOscura)
+    // Agua alrededor (líneas)
+    ctx.save()
+    ctx.strokeStyle = 'rgba(110,100,80,0.4)'
+    ctx.lineWidth = 2
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath()
+      ctx.moveTo(0, h - 4 + i * 3)
+      ctx.lineTo(w, h - 6 + i * 3)
+      ctx.stroke()
+    }
+    ctx.restore()
+  },
+}
+
+const woodBridge: DrawerDef = {
+  w: 200, h: 50,
+  draw(ctx: C, w: number, h: number): void {
+    const cx = w / 2
+    // Tablones horizontales sobre el agua
+    for (let i = 0; i < 4; i++) {
+      const y = 4 + i * 12
+      const offX = (i % 2) * 6
+      ctx.save()
+      ctx.fillStyle = i % 2 === 0 ? PALETTE.sombrero : PALETTE.sombreroAla
+      ctx.fillRect(offX, y, w - offX * 2, 10)
+      ctx.strokeStyle = PALETTE.tierraOscura
+      ctx.lineWidth = 1
+      ctx.strokeRect(offX, y, w - offX * 2, 10)
+      ctx.restore()
+    }
+    // Sombra debajo
+    ctx.save()
+    ctx.globalAlpha = 0.3
+    ctx.fillStyle = '#000'
+    ctx.beginPath()
+    ctx.ellipse(cx, h - 2, w * 0.45, 4, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+  },
+}
+
 /* ────────────────────── Registro ────────────────────── */
 
 export const DRAWERS: Record<string, DrawerDef> = {
@@ -1233,6 +1376,7 @@ export const DRAWERS: Record<string, DrawerDef> = {
   acay_stand_front: acayStandFront,
   antagonist_ucumar: antagonistUcumar,
   antagonist_shadow: antagonistShadow,
+  duende: duende,
   explore_background: exploreBackground,
   rhythm_track: rhythmTrack,
   narrative_rock: narrativeRock,
@@ -1242,6 +1386,8 @@ export const DRAWERS: Record<string, DrawerDef> = {
   title_logo: titleLogo,
   narrative_guitar: narrativeGuitar,
   narrative_relic: narrativeRelic,
+  unstable_rock: unstableRock,
+  wood_bridge: woodBridge,
   rocks_in_river: rocksInRiver,
   campamento_background: campamentoBackground,
   gaucho_sleeping: gauchoSleeping,

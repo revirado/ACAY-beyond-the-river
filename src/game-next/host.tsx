@@ -14,6 +14,8 @@ import { CustomCursor } from '@/game-next/components/CustomCursor'
 import { LanguageSwitch } from '@/game-next/components/LanguageSwitch'
 import { VersionBadge } from '@/game-next/components/VersionBadge'
 import { ObjectiveTracker } from '@/game-next/components/ObjectiveTracker'
+import { EndScreen } from '@/game-next/components/EndScreen'
+import { TitleOverlay } from '@/game-next/components/TitleOverlay'
 
 /**
  * AcayHost — monta el motor con `acayModule` sobre el canvas y compone los
@@ -33,6 +35,7 @@ export function AcayHost({ devMode = false }: { devMode?: boolean }) {
   const hasDialogue = useGameStore((s) => s.dialogue !== null)
   const uiUnlocked = useGameStore((s) => s.uiUnlocked ?? false)
   const inventoryUnlocked = useGameStore((s) => s.inventoryUnlocked ?? false)
+  const demoEnded = useGameStore((s) => s.demoEnded ?? false)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -131,6 +134,13 @@ export function AcayHost({ devMode = false }: { devMode?: boolean }) {
 
         {/* Versión de desarrollo — siempre visible (todas las pantallas) */}
         <VersionBadge />
+
+        {/* End screen — fin de demo (4.2) */}
+        <EndScreen />
+
+        {/* Title overlay — capa de título sobre el gameplay (50.4).
+            Solo se monta cuando explore está activo (no durante studio/title). */}
+        {ready && screen === 'explore' && !demoEnded && <TitleOverlay />}
 
         {/* devMode badge */}
         {ready && devMode && (

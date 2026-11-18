@@ -14,7 +14,6 @@ import { CONFIG } from '@/game-next/core/config'
 import { getLocale } from '@/engine/i18n'
 
 import { StudioScreen } from '@/game-next/screens/StudioScreen'
-import { TitleScreen } from '@/game-next/screens/TitleScreen'
 import { ExploreScreen } from '@/game-next/screens/ExploreScreen'
 import { RhythmBattleScreen } from '@/game-next/screens/RhythmBattleScreen'
 
@@ -97,6 +96,9 @@ function buildAcaySnapshot(ctx: GameSnapshotContext<AcayState>): AcaySnapshot {
     uiUnlocked: !!st.flags.acayAwakened,
     inventoryUnlocked: !!st.flags.inventoryUnlocked,
     objective: st.objective,
+    selectedItemId: st.selectedItemId,
+    demoEnded: !!st.flags.demoEnded,
+    titleShown: !!st.flags.titleShown,
   }
 }
 
@@ -129,7 +131,6 @@ export const acayModule: GameModule<AcayState, AcaySnapshot> = {
   createScreens(_ctx: ScreenContext<AcayState>): GameScreen[] {
     return [
       new StudioScreen(),
-      new TitleScreen(),
       new ExploreScreen(),
       new RhythmBattleScreen(),
     ]

@@ -48,6 +48,9 @@ export class AcayGameState extends GameState {
   /** Contador de intentos de salir por la izquierda (scene 01, 1.3). */
   leftExitAttempts = 0
 
+  /** Item seleccionado del inventario (para use-item mechanic). */
+  selectedItemId: string | null = null
+
   /** Reinicio completo (nueva partida). */
   reset(): void {
     this.inventory = []
@@ -60,6 +63,7 @@ export class AcayGameState extends GameState {
     this.objective = null
     this.currentScene = "river_shore"
     this.leftExitAttempts = 0
+    this.selectedItemId = null
     this.markChanged()
   }
 
@@ -73,5 +77,13 @@ export class AcayGameState extends GameState {
   /** ¿Tiene el item con ese id? */
   hasItem(itemId: string): boolean {
     return this.inventory.some((i) => i.id === itemId)
+  }
+
+  /** Remueve un item del inventario por id. Devuelve true si lo removió. */
+  removeItem(itemId: string): boolean {
+    const idx = this.inventory.findIndex((i) => i.id === itemId)
+    if (idx < 0) return false
+    this.inventory.splice(idx, 1)
+    return true
   }
 }

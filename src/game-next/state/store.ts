@@ -21,6 +21,9 @@ const initialSnapshot: AcaySnapshot = {
   uiUnlocked: false,
   inventoryUnlocked: false,
   objective: null,
+  selectedItemId: null,
+  demoEnded: false,
+  titleShown: false,
 }
 
 export const useGameStore = createGameStore<AcaySnapshot>(initialSnapshot)

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { useGameStore } from '@/game-next/state/store'
 import { CONFIG, PALETTE } from '@/game-next/core/config'
+import { AssetImg } from './AssetImg'
 
 /**
  * CustomCursor — puntero customizado en React (NO canvas).
@@ -12,16 +13,21 @@ import { CONFIG, PALETTE } from '@/game-next/core/config'
  *
  * - Sigue al mouse en tiempo real (pointermove → actualiza transform via ref,
  *   sin re-render por frame).
- * - Cambia de aspecto según hoveredElementId del store:
- *   - Default: anillo hueco terracota.
- *   - Sobre elemento interactivo: círculo lleno dorado.
+ * - Cambia de aspecto según estado:
+ *   - Default: anillo hueco blanco.
+ *   - Sobre elemento interactivo: círculo lleno blanco.
+ *   - Item seleccionado (60.4): muestra el icono del item arrastrándose
+ *     con un borde dorado, para que el jugador sepa qué item está usando.
  * - Cursor nativo oculto (lo maneja AcayHost con cursor:none en el canvas).
- * - Solo visible en pantallas explore/rhythm-battle (lo controla AcayHost).
  */
 export function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement | null>(null)
   const hoveredId = useGameStore((s) => s.hoveredElementId)
+  const selectedItemId = useGameStore((s) => s.selectedItemId)
+  const inventory = useGameStore((s) => s.inventory)
   const overElement = hoveredId !== null
+
+  const selectedItem = selectedItemId ? inventory.find((i) => i.id === selectedItemId) : null
 
   useEffect(() => {
     const el = cursorRef.current
@@ -61,8 +67,29 @@ export function CustomCursor() {
       }}
       aria-hidden
     >
-      {overElement ? (
-        // Círculo lleno dorado (interactuable)
+      {selectedItem ? (
+        // Item seleccionado: muestra el icono del item arrastrándose (60.4)
+        <div
+          style={{
+            position: 'absolute',
+            left: -18,
+            top: -18,
+            width: 36,
+            height: 36,
+            borderRadius: '6px',
+            border: `2px solid ${PALETTE.dorado}`,
+            background: 'rgba(15,10,8,0.7)',
+            boxShadow: `0 0 10px ${PALETTE.dorado}80`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}
+        >
+          <AssetImg id={selectedItem.icon} alt={selectedItem.label} className="max-h-7 max-w-7" />
+        </div>
+      ) : overElement ? (
+        // Círculo lleno (interactuable)
         <div
           style={{
             position: 'absolute',
@@ -77,7 +104,7 @@ export function CustomCursor() {
           }}
         />
       ) : (
-        // Anillo hueco terracota (default)
+        // Anillo hueco (default)
         <div
           style={{
             position: 'absolute',
@@ -90,7 +117,6 @@ export function CustomCursor() {
             background: 'transparent',
           }}
         >
-          {/* Punto central */}
           <div
             style={{
               position: 'absolute',

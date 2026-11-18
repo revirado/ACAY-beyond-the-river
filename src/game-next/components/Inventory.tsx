@@ -21,6 +21,7 @@ import { getEngine } from '@/engine/core/engineBridge'
  */
 export function Inventory() {
   const inventory = useGameStore((s) => s.inventory)
+  const selectedItemId = useGameStore((s) => s.selectedItemId)
   const [open, setOpen] = useState(false)
   const count = inventory.length
 
@@ -126,19 +127,30 @@ export function Inventory() {
               </p>
             ) : (
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {inventory.map((item) => (
+                {inventory.map((item) => {
+                  const isSelected = selectedItemId === item.id
+                  return (
                   <div
                     key={item.id}
                     onClick={() => {
-                      // Guitarra → reproducir nota musical
+                      // Guitarra → reproducir nota musical (no seleccionable)
                       if (item.id === 'guitar') {
                         getEngine()?.audio.playSfx('guitar')
+                        return
                       }
+                      // Otros items: seleccionar/deseleccionar (use-item mechanic)
+                      const engine = getEngine()
+                      if (!engine) return
+                      const newId = isSelected ? null : item.id
+                      engine.state.selectedItemId = newId
+                      engine.syncUI()
+                      if (newId) setOpen(false) // cerrar modal para clickear el escenario
                     }}
-                    className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border p-2 transition hover:bg-amber-200/20"
+                    className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border-2 p-2 transition hover:bg-amber-200/20"
                     style={{
-                      borderColor: 'rgba(124,82,48,0.3)',
-                      background: 'rgba(243,227,194,0.4)',
+                      borderColor: isSelected ? PALETTE.dorado : 'rgba(124,82,48,0.3)',
+                      background: isSelected ? 'rgba(217,168,63,0.2)' : 'rgba(243,227,194,0.4)',
+                      boxShadow: isSelected ? `0 0 8px ${PALETTE.dorado}80` : 'none',
                     }}
                   >
                     <div className="flex h-14 w-14 items-center justify-center">
@@ -151,7 +163,8 @@ export function Inventory() {
                       {item.label}
                     </span>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 

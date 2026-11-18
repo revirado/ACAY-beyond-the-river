@@ -1,4 +1,4 @@
-import type { NarrativeElement, DialogueLine, SceneId } from '@/game-next/core/types'
+import type { NarrativeElement, DialogueLine, SceneId, ExitCondition } from '@/game-next/core/types'
 import { t } from '@/engine/i18n'
 
 /**
@@ -47,7 +47,9 @@ function buildRiverShoreElements(): NarrativeElement[] {
       inspectText: t('scene01.acay_unconscious_hover'),
       isCharacter: true,
     },
-    // ─── Rocas atrapadas en el cauce (1.3) ───
+    // ─── Rocas atrapadas en el cauce (1.3 + 4.1: useItem=vara) ───
+    // Tras questGauchoCompleted: acepta Vara de Hierro (useItem).
+    // Tras usar Vara: hideFlag=rocksPushed (roca cae al río).
     {
       id: 'rocks',
       asset: 'scene.rocks_in_river',
@@ -58,6 +60,40 @@ function buildRiverShoreElements(): NarrativeElement[] {
       hoverText: t('scene01.rocks_hover'),
       inspectText: t('scene01.rocks_inspect'),
       isCharacter: false,
+      hideFlag: 'rocksPushed',
+      useItem: 'vara',
+      useItemText: t('scene04.vara_use'),
+      useItemFlag: 'rocksPushed',
+    },
+    // ─── Roca inestable (4.1: aparece tras rocksPushed, useItem=maderas) ───
+    {
+      id: 'unstable_rock',
+      asset: 'scene.unstable_rock',
+      x: 640, y: 450, scale: 1.0,
+      hitW: 120, hitH: 80,
+      walkToX: 580,
+      label: t('scene04.unstable_rock_label'),
+      hoverText: t('scene04.unstable_rock_hover'),
+      inspectText: t('scene04.unstable_rock_inspect'),
+      isCharacter: false,
+      appearsAfterFlag: 'rocksPushed',
+      hideFlag: 'bridgeBuilt',
+      useItem: 'wood',
+      useItemText: t('scene04.wood_use'),
+      useItemFlag: 'bridgeBuilt',
+    },
+    // ─── Puente de maderas (4.1: aparece tras bridgeBuilt → cruzar, 4.2) ───
+    {
+      id: 'wood_bridge',
+      asset: 'scene.wood_bridge',
+      x: 640, y: 440, scale: 1.0,
+      hitW: 200, hitH: 60,
+      walkToX: 580,
+      label: t('scene04.bridge_label'),
+      hoverText: t('scene04.bridge_hover'),
+      inspectText: t('scene04.bridge_inspect'),
+      isCharacter: false,
+      appearsAfterFlag: 'bridgeBuilt',
     },
     // ─── Salida izquierda (regresar — bloqueada, 1.3) ───
     {
@@ -73,10 +109,10 @@ function buildRiverShoreElements(): NarrativeElement[] {
       isExit: true,
       exitTargetScene: '', // vacío = bloqueada
     },
-    // ─── Salida derecha (→ campamento, 1.3) ───
+    // ─── Salida derecha (→ campamento, CON CONDICIONES) ───
     {
       id: 'right_exit',
-      asset: '', // sin sprite (exit hotspot)
+      asset: '',
       x: 1220, y: 500, scale: 1.0,
       hitW: 120, hitH: 400,
       walkToX: 1160,
@@ -86,6 +122,7 @@ function buildRiverShoreElements(): NarrativeElement[] {
       isCharacter: false,
       isExit: true,
       exitTargetScene: 'campamento',
+      conditions: buildRiverShoreRightExitConditions(),
     },
   ]
 }
@@ -131,6 +168,17 @@ function buildCampamentoElements(): NarrativeElement[] {
       dialogue: buildGauchoDialogue(),
       // altAsset: tras click, cambia a gaucho_awake (despierto, hablando)
       altAsset: { flag: 'gauchoAwake', asset: 'prop.gaucho_awake' },
+      // Diálogo condicional: si el jugador vuelve tras haber hablado + usado
+      // la vara (rocksPushed) pero sin tener maderas → "¿Te olvidaste?"
+      dialogueConditions: [
+        {
+          flag: 'rocksPushed',
+          notFlag: 'woodTaken',
+          dialogue: [
+            { speaker: t('scene02.gaucho_speaker'), text: t('scene02.gaucho_return') },
+          ],
+        },
+      ],
     },
     // ─── Cardón (decorativo) ───
     {
@@ -202,7 +250,9 @@ function buildCampamentoElements(): NarrativeElement[] {
       blocked: true,
       blockedText: t('scene02.blocked_gaucho'),
     },
-    // ─── Salida izquierda (→ river_shore) ───
+    // ─── Salida izquierda (→ river_shore, CON CONDICIONES) ───
+    // Condiciones evaluadas en orden: la primera que coincide determina la acción.
+    // Data-driven: el ExploreScreen consume conditions, no ifs hardcoded.
     {
       id: 'left_exit',
       asset: '',
@@ -215,8 +265,9 @@ function buildCampamentoElements(): NarrativeElement[] {
       isCharacter: false,
       isExit: true,
       exitTargetScene: 'river_shore',
+      conditions: buildCampamentoLeftExitConditions(),
     },
-    // ─── Salida derecha (→ interceptada por gaucho, prep Escena 03) ───
+    // ─── Salida derecha (CON CONDICIONES) ───
     {
       id: 'right_exit',
       asset: '',
@@ -228,7 +279,8 @@ function buildCampamentoElements(): NarrativeElement[] {
       inspectText: '',
       isCharacter: false,
       isExit: true,
-      exitTargetScene: '', // vacío = interceptada por gaucho (scene 03 trigger)
+      exitTargetScene: '',
+      conditions: buildCampamentoRightExitConditions(),
     },
   ]
 }
@@ -247,8 +299,124 @@ function buildGauchoDialogue(): DialogueLine[] {
   ]
 }
 
+/* ────────────────────── Condiciones data-driven de exits ────────────────────── */
+
+/**
+ * Condiciones del exit izquierdo del campamento (→ river_shore).
+ * Evaluadas en orden: la primera que coincide determina la acción.
+ *
+ * 1. No habló con el gaucho → bloqueado ("No debería irme sin hablar con el gaucho.")
+ * 2. No hizo tutorial → gaucho lo detiene (3.1: stop dialogue → tutorial coop)
+ * 3. No completó quest → gaucho lo detiene (3.2: warning → battle turn-based)
+ * 4. Quest completada → transición a river_shore
+ */
+function buildCampamentoLeftExitConditions(): ExitCondition[] {
+  const g = t('scene02.gaucho_speaker')
+  return [
+    {
+      notFlag: 'gauchoDialogueDone',
+      action: 'blocked',
+      blockedText: t('scene02.exit_blocked_no_gaucho'),
+    },
+    {
+      notFlag: 'tutorialComplete',
+      action: 'dialogue',
+      owner: 'gaucho_stop',
+      dialogue: [
+        { speaker: g, text: t('scene02.gaucho_stop_1') },
+        { speaker: t('scene01.acay_label'), text: '…', isAcay: true },
+        { speaker: g, text: t('scene02.gaucho_stop_3') },
+      ],
+    },
+    {
+      notFlag: 'questGauchoCompleted',
+      action: 'dialogue',
+      owner: 'trigger:gaucho_warning',
+      dialogue: [
+        { speaker: g, text: t('scene02.gaucho_warning') },
+        { speaker: 'Duende', text: t('scene02.duende_intro') },
+      ],
+    },
+    {
+      flag: 'questGauchoCompleted',
+      action: 'transition',
+      targetScene: 'river_shore',
+    },
+  ]
+}
+
+/**
+ * Condiciones del exit derecho del campamento.
+ * Mismas condiciones 1-3 que el izquierdo. Tras quest completada → bloqueado
+ * (el río está al otro lado, debe volver y cruzar por river_shore).
+ */
+function buildCampamentoRightExitConditions(): ExitCondition[] {
+  const g = t('scene02.gaucho_speaker')
+  return [
+    {
+      notFlag: 'gauchoDialogueDone',
+      action: 'blocked',
+      blockedText: t('scene02.exit_blocked_right_no_gaucho'),
+    },
+    {
+      notFlag: 'tutorialComplete',
+      action: 'dialogue',
+      owner: 'gaucho_stop',
+      dialogue: [
+        { speaker: g, text: t('scene02.gaucho_stop_1') },
+        { speaker: t('scene01.acay_label'), text: '…', isAcay: true },
+        { speaker: g, text: t('scene02.gaucho_stop_3') },
+      ],
+    },
+    {
+      notFlag: 'questGauchoCompleted',
+      action: 'dialogue',
+      owner: 'trigger:gaucho_warning',
+      dialogue: [
+        { speaker: g, text: t('scene02.gaucho_warning') },
+        { speaker: 'Duende', text: t('scene02.duende_intro') },
+      ],
+    },
+    {
+      flag: 'questGauchoCompleted',
+      action: 'blocked',
+      blockedText: t('scene02.exit_blocked_quest_done_right'),
+    },
+  ]
+}
+
+/**
+ * Condiciones del exit derecho de river_shore (→ campamento).
+ * Tras questGauchoCompleted: bloqueado con hints hacia el cruce (Escena 04).
+ */
+function buildRiverShoreRightExitConditions(): ExitCondition[] {
+  return [
+    {
+      notFlag: 'questGauchoCompleted',
+      action: 'transition',
+      targetScene: 'campamento',
+    },
+    {
+      notFlag: 'rocksPushed',
+      action: 'blocked',
+      blockedText: t('scene04.exit_right_no_rocks'),
+    },
+    {
+      notFlag: 'bridgeBuilt',
+      action: 'transition',
+      targetScene: 'campamento',
+    },
+    {
+      flag: 'bridgeBuilt',
+      action: 'blocked',
+      blockedText: t('scene04.exit_right_bridge_ready'),
+    },
+  ]
+}
+
 /** Antagonistas disponibles para batallas rítmicas. */
 export const ANTAGONISTS: Record<string, { name: string; asset: string }> = {
   ucumar: { name: 'Ucumar', asset: 'ant.ucumar' },
   shadow: { name: 'Sombra', asset: 'ant.shadow' },
+  duende: { name: 'Duende', asset: 'ant.duende' },
 }
