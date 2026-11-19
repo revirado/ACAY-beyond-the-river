@@ -31,7 +31,7 @@
     "victory": "¡Sobreviviste!",
     "defeat": "Caíste…",
     "exit": "ESC para volver",
-    "tutorial_title": "Tutorial Musical",
+    "tutorial_title": "Sintonía",
     "notes_played": "Notas tocadas",
     "notes_missed": "Notas perdidas",
     "tutorial_hint": "¡Toca las notas! (←/→ para ubicarte en la lane del tab)",
@@ -180,7 +180,7 @@
     "exit_blocked_right_no_gaucho": "No sé qué hay por aquí. Mejor hablar con el gaucho.",
     "exit_blocked_quest_done_left": "Ya crucé el río una vez. El campamento queda atrás.",
     "exit_blocked_quest_done_right": "El río está al otro lado. Debo volver y cruzar.",
-    "gaucho_return": "¿Te olvidaste? Tomá las maderas y andá."
+    "gaucho_return": "¿Te olvidaste algo?"
   },
   "scene04": {
     "vara_use": "Lo logré, pero es muy inestable, no puedo pisar sobre ella sin caer, pero al menos el río bajó un poco.",

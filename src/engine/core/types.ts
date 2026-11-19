@@ -48,7 +48,7 @@ export type Collider =
 /* ───────────────── Animación por deformación (declarativa) ───────────────── */
 
 /** Tipos de animación disponibles (extensible: agregar kind + evaluator en anim.ts). */
-export type AnimKind = 'pandeo'
+export type AnimKind = 'pandeo' | 'frameSwap'
 
 /**
  * Definición declarativa de animación, attachable a cualquier asset vía el
@@ -60,11 +60,18 @@ export type AnimKind = 'pandeo'
 export interface AnimDef {
   kind: AnimKind
   /** Amplitud máxima de la deformación (pandeo: shear horizontal máx, ej. 0.16). */
-  amplitude: number
+  amplitude?: number
   /** Duración del ciclo completo en segundos (velocidad de loop). */
-  periodSec: number
+  periodSec?: number
   /** Desfasaje 0..1 dentro del ciclo (opcional; desincroniza instancias). */
   phase?: number
+  // ── frameSwap ──
+  /** Para frameSwap: si true = loop infinito. false = una vez + queda en último frame. */
+  loop?: boolean
+  /** Para frameSwap: duración total de la animación (separación auto = durationSec / frames.length). */
+  durationSec?: number
+  /** Para frameSwap: separación explícita entre frames (alternativa a durationSec). */
+  frameIntervalSec?: number
 }
 
 /* ───────────────── Índice de assets ───────────────── */
@@ -75,13 +82,15 @@ export interface AssetSourceDef {
   type: AssetSourceType
   /** Para 'file' (ruta pública en /public) o 'url' (https). */
   src?: string
+  /** Para 'file'/'url' con animación frameSwap: lista de rutas de frames. */
+  frames?: string[]
   /** Para 'procedural': nombre del drawer incorporado. */
   drawer?: string
   /** Etiqueta para placeholders. */
   label?: string
   /** Color base para placeholders. */
   color?: string
-  /** Animación por deformación (feature de motor, opcional). */
+  /** Animación (pandeo = deformación, frameSwap = cambio de frames). */
   anim?: AnimDef
 }
 

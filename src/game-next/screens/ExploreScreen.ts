@@ -598,15 +598,18 @@ export class ExploreScreen implements GameScreen<'explore', AcayGameState> {
     drawables.sort((a, b) => a.y - b.y)
     for (const d of drawables) d.draw()
 
-    // Tooltip de hover
+    // Tooltip de hover (con clamp para que no se salga de pantalla)
     const hovered = st.hoveredElementId ? this.elements.find((e) => e.id === st.hoveredElementId) : null
     if (hovered && this.fadeAlpha <= 0) {
       const bounce = Math.sin(ctx.time * 5) * 2
       const py = hovered.y - (hovered.hitH ?? 100) * (hovered.scale ?? 1) - 16 + bounce
       const label = hovered.label
       const w = renderer.textWidth(label, { size: 18, weight: 'bold' }) + 28
-      renderer.roundRect(hovered.x - w / 2, py - 26, w, 34, 17, 'rgba(243,227,194,0.95)')
-      renderer.text(label, hovered.x, py - 9, {
+      // Clamp X para que el tooltip no se salga de pantalla (70.3)
+      const halfW = w / 2
+      const tx = Math.max(halfW + 4, Math.min(VIRTUAL_WIDTH - halfW - 4, hovered.x))
+      renderer.roundRect(tx - halfW, py - 26, w, 34, 17, 'rgba(243,227,194,0.95)')
+      renderer.text(label, tx, py - 9, {
         size: 18, weight: 'bold', color: PALETTE.tinta,
         align: 'center', baseline: 'middle', font: 'serif',
       })

@@ -31,7 +31,7 @@
     "victory": "You survived!",
     "defeat": "You fell…",
     "exit": "ESC to return",
-    "tutorial_title": "Music Tutorial",
+    "tutorial_title": "Harmony",
     "notes_played": "Notes played",
     "notes_missed": "Notes missed",
     "tutorial_hint": "Play the notes! (←/→ to align with the tab lane)",
@@ -180,7 +180,7 @@
     "exit_blocked_right_no_gaucho": "I don't know what's here. Better talk to the gaucho.",
     "exit_blocked_quest_done_left": "I already crossed the river once. The camp is behind me.",
     "exit_blocked_quest_done_right": "The river is on the other side. I must go back and cross.",
-    "gaucho_return": "Forgot something? Take the wood and go."
+    "gaucho_return": "Forgot something?"
   },
   "scene04": {
     "vara_use": "I did it, but it's too unstable, I can't step on it without falling, but at least the river went down a bit.",

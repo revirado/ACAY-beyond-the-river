@@ -10,11 +10,14 @@
 
 import { makePlaceholder, placeholderImage } from './placeholder'
 import { NO_DRAWERS, type DrawerDef } from './drawers'
+import { evalFrameIndex } from '@/engine/render/anim'
 import type { AnimDef, AssetImage, AssetSourceDef } from '@/engine/core/types'
 
 /** Registro interno de un asset ya resuelto. */
 interface LoadedAsset {
   img: AssetImage
+  /** Para frameSwap: lista de imágenes (frames). Si null, asset estático. */
+  frames?: AssetImage[]
   /** URL usable en <img>: data URL del canvas, src original o data URI SVG. */
   url: string
   w: number
@@ -65,8 +68,8 @@ export class AssetLoader {
     await Promise.all(tasks)
   }
 
-  /** Asset listo para dibujar (HTMLImageElement o HTMLCanvasElement). */
-  get(id: string): AssetImage {
+  /** Asset listo para dibujar. Si tiene frames (frameSwap), devuelve el frame actual. */
+  get(id: string, timeSec?: number): AssetImage {
     const entry = this.cache.get(id)
     if (!entry) {
       throw new Error(
@@ -74,6 +77,14 @@ export class AssetLoader {
           ? `[assets] El asset "${id}" aún no está cargado (llamá loadAll() primero).`
           : `[assets] Asset desconocido: "${id}"`,
       )
+    }
+    // Si tiene frames y se provee timeSec, devolver el frame actual
+    if (entry.frames && entry.frames.length > 1 && timeSec !== undefined) {
+      const def = this.index[id]?.anim
+      if (def && def.kind === 'frameSwap') {
+        const frameIndex = evalFrameIndex(def, timeSec, entry.frames.length)
+        return entry.frames[frameIndex]
+      }
     }
     return entry.img
   }
@@ -144,10 +155,48 @@ export class AssetLoader {
       }
       case 'file':
       case 'url': {
-        await this.loadImageAsset(id, def)
+        // Si tiene frames[] (animación frameSwap), cargar todos los frames
+        if (def.frames && def.frames.length > 0) {
+          await this.loadFramesAsset(id, def)
+        } else {
+          await this.loadImageAsset(id, def)
+        }
         return
       }
     }
+  }
+
+  /** Carga múltiples frames para animación frameSwap. */
+  private async loadFramesAsset(id: string, def: AssetSourceDef): Promise<void> {
+    const frameSrcs = def.frames!
+    try {
+      const imgs = await Promise.all(
+        frameSrcs.map((src) => this.loadSingleImage(src, def.type === 'url')),
+      )
+      // img principal = primer frame; frames = todos
+      const first = imgs[0]
+      this.cache.set(id, {
+        img: first,
+        frames: imgs,
+        url: frameSrcs[0],
+        w: first.naturalWidth,
+        h: first.naturalHeight,
+      })
+    } catch {
+      console.warn(`[assets] No se pudieron cargar los frames de "${id}". Usando placeholder.`)
+      await this.fallbackPlaceholder(id)
+    }
+  }
+
+  /** Carga una sola imagen (helper para loadFramesAsset). */
+  private loadSingleImage(src: string, crossOrigin: boolean): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const image = new Image()
+      if (crossOrigin) image.crossOrigin = 'anonymous'
+      image.onload = () => resolve(image)
+      image.onerror = () => reject(new Error(`[assets] Falló la carga de "${src}".`))
+      image.src = src
+    })
   }
 
   /**

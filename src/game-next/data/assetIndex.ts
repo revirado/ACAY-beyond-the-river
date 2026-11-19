@@ -29,15 +29,20 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
 
   // ─── Acay (personaje principal) ───
   // De espaldas: poncho terracota + sombrero oscuro. Usado en batalla rítmica.
-  'acay.back': { type: 'procedural', drawer: 'acay_back' },
+  'acay.back': { type: 'file', src: '/assets/char/acay_back.png' },
+  
   // Inconsciente (tirado en el suelo, respirando). Asset con anim sutil.
-  'acay.unconscious': {
-    type: 'procedural',
-    drawer: 'acay_unconscious',
-    anim: { kind: 'pandeo', amplitude: 0.015, periodSec: 3 },
-  },
+ 'acay.unconscious': {
+  type: 'file',
+  frames: [
+    '/assets/char/acay_breath_f1.png',
+    '/assets/char/acay_breath_f2.png',
+  ],
+  anim: { kind: 'frameSwap', loop: true, durationSec: 1 },
+},
+  
   // De pie, frente (sombrero tapa rostro). Tras despertar.
-  'acay.stand_front': { type: 'procedural', drawer: 'acay_stand_front' },
+  'acay.stand_front': { type: 'file', src: '/assets/char/acay_stand_front.png' },
 
   // ─── Antagonistas (siluetas mockup) ───
   'ant.ucumar': { type: 'procedural', drawer: 'antagonist_ucumar' },
@@ -45,7 +50,7 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
   'ant.duende': { type: 'procedural', drawer: 'duende' },
 
   // ─── Escenarios ───
-  'scene.river_shore': { type: 'procedural', drawer: 'explore_background' },
+  'scene.river_shore': { type: 'file', src: '/assets/scene/river_shore.png' },
   'scene.rhythm_track': { type: 'procedural', drawer: 'rhythm_track' },
 
   // ─── Elementos narrativos (escena POV) ───
@@ -57,15 +62,15 @@ export const ASSET_INDEX: Record<string, AssetSourceDef> = {
   'narrative.relic': { type: 'procedural', drawer: 'narrative_relic' },
 
   // ─── Escena 01: rocas en el río ───
-  'scene.rocks_in_river': { type: 'procedural', drawer: 'rocks_in_river' },
-  'scene.unstable_rock': { type: 'procedural', drawer: 'unstable_rock' },
-  'scene.wood_bridge': { type: 'procedural', drawer: 'wood_bridge' },
+  'scene.rocks_in_river': { type: 'file', src: '/assets/scene/rocks_in_river_00.png' },
+  'scene.unstable_rock': { type: 'file', src: '/assets/scene/rocks_in_river_01.png' },
+  'scene.wood_bridge': { type: 'file', src: '/assets/scene/rocks_in_river_02.png' },
 
   // ─── Escena 02: Campamento del Gaucho ───
-  'scene.campamento_background': { type: 'procedural', drawer: 'campamento_background' },
-  'prop.gaucho_sleeping': { type: 'procedural', drawer: 'gaucho_sleeping' },
-  'prop.gaucho_awake': { type: 'procedural', drawer: 'gaucho_awake' },
-  'prop.cardon': { type: 'procedural', drawer: 'cardon' },
+  'scene.campamento_background':  { type: 'file', src: '/assets/scene/river_shore.png' },
+  'prop.gaucho_sleeping': { type: 'file', src: '/assets/prop/asset_gaucho_f00.png' },
+  'prop.gaucho_awake': { type: 'file', src: '/assets/prop/asset_gaucho_f01.png' },
+  'prop.cardon': { type: 'file', src: '/assets/prop/cardon.png' },
   'prop.kettle': { type: 'procedural', drawer: 'kettle' },
   'prop.wood_pile': { type: 'procedural', drawer: 'wood_pile' },
   'prop.firepit_ashes': { type: 'procedural', drawer: 'firepit_ashes' },

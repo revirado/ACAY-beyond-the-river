@@ -22,7 +22,7 @@ import { FADE_PRESETS } from '@/engine/core/config'
  * visible). Incrementar el último dígito en cada iteración (v0.0.X). El
  * segundo dígito solo sube a v0.1.0 cuando el usuario lo indique.
  */
-export const VERSION = 'v0.0.16'
+export const VERSION = 'v0.0.18'
 
 /**
  * Paleta andina NOA (Valles Calchaquíes / Puna).
